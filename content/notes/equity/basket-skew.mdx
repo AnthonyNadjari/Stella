@@ -1,0 +1,223 @@
+---
+title: Basket Skew Reconstruction
+category: Equity
+description: How to reconstruct the implied skew of a basket from single-stock volatilities, correlations, and higher-order effects.
+tags: [skew, basket, correlation, volatility, dispersion]
+date: 2025-02-10
+---
+
+import Section from "@/components/Section";
+import Callout from "@/components/Callout";
+import MathBlock from "@/components/MathBlock";
+import Sketch from "@/components/Sketch";
+
+<Section number="01" title="Problem Statement">
+
+A basket option written on $n$ underlyings with weights $w_i$ has a payoff driven by the **aggregate move** of the basket. When pricing exotic derivatives on baskets — dispersion trades, worst-of structures, rainbow options — a key input is the **implied volatility surface of the basket itself**.
+
+In practice, liquid vanilla options exist on the individual underlyings, not on the basket directly. The task is to **reconstruct the basket's implied vol surface** — and in particular its **skew** — from single-stock information and a correlation structure.
+
+<Callout type="insight">
+  The basket skew is not a simple weighted average of single-stock skews. It depends non-linearly on correlations, and the reconstruction error can be significant for short-dated options or highly skewed underlyings.
+</Callout>
+
+The basket price at time $T$ is:
+
+$$
+B_T = \sum_{i=1}^n w_i S_i(T)
+$$
+
+with $\sum_i w_i = 1$ (dollar-neutral or notional-weighted). We define the basket log-return as:
+
+$$
+X_B = \log\frac{B_T}{B_0}
+$$
+
+</Section>
+
+<Section number="02" title="First-Order Approximation">
+
+## Linear Vol Approximation
+
+Under a **Gaussian correlation model** (all underlyings lognormal), the basket variance is:
+
+$$
+\sigma_B^2 \approx \sum_{i,j} w_i w_j \rho_{ij} \sigma_i \sigma_j
+$$
+
+This gives the **at-the-money vol** of the basket directly. Note this is the standard portfolio variance formula applied to log-returns.
+
+<MathBlock label="Basket ATM Variance" number="2.1">
+
+$$
+\sigma_B^2 = \mathbf{w}^\top \Sigma \mathbf{w}
+$$
+
+where $\Sigma_{ij} = \rho_{ij}\,\sigma_i\,\sigma_j$ is the covariance matrix.
+
+</MathBlock>
+
+The **first-order skew** of the basket can be derived via a cumulant expansion. Define the skewness of stock $i$ as $\kappa_3^{(i)}$ (the third standardized cumulant of $\log S_i$). Then:
+
+$$
+\kappa_3^B \approx \frac{\sum_{i,j,k} w_i w_j w_k \,C_{ijk}}{\sigma_B^3}
+$$
+
+where $C_{ijk} = \mathbb{E}[\delta X_i \, \delta X_j \, \delta X_k]$ is the **third-order co-cumulant** tensor.
+
+<Callout type="warning">
+  The co-cumulant tensor $C_{ijk}$ is rarely observable directly. In practice, one assumes a **diagonal approximation** where cross-stock third moments are set to zero. This underestimates basket skew when correlations are high.
+</Callout>
+
+</Section>
+
+<Section number="03" title="Skew via Moment Matching">
+
+## The Moment Matching Approach
+
+A cleaner method is to **match moments** of a parametric distribution (log-normal, SABR, SVI) to those computed from the basket's cumulants.
+
+**Step 1** — Compute basket moments up to order 4:
+
+$$
+m_k^B = \mathbb{E}\left[\left(\frac{B_T - \mathbb{E}[B_T]}{\sigma_B}\right)^k\right], \quad k = 1,2,3,4
+$$
+
+These can be expanded via Isserlis' theorem (Wick's theorem) when the $X_i$ are jointly Gaussian, and corrected for non-Gaussian marginals.
+
+**Step 2** — Fit a **Gram-Charlier expansion** of the basket density:
+
+<MathBlock label="Gram-Charlier Density" number="3.1">
+
+$$
+f_B(x) = \phi(x)\left[1 + \frac{\kappa_3^B}{6}H_3(x) + \frac{\kappa_4^B}{24}H_4(x) + \cdots \right]
+$$
+
+where $H_k$ are the **Hermite polynomials** and $\phi$ is the standard normal density.
+
+</MathBlock>
+
+**Step 3** — Extract the implied volatility smile:
+
+From the Gram-Charlier density, the implied vol can be approximated as:
+
+$$
+\sigma_{\text{imp}}(k) \approx \sigma_B\left[1 + \frac{\kappa_3^B}{6}k + \frac{\kappa_4^B - 3}{24}k^2\right]
+$$
+
+where $k = \log(K/F)/\sigma_B\sqrt{T}$ is the **normalized moneyness**.
+
+<Callout type="result">
+  The basket skew (slope of $\sigma_{\text{imp}}$ vs $k$) is proportional to $\kappa_3^B$. For a basket of negatively skewed stocks under positive correlation, the basket skew is weaker than the average single-stock skew — a fundamental result for dispersion trading.
+</Callout>
+
+</Section>
+
+<Section number="04" title="Correlation Weighting of Skew">
+
+## How Correlation Dilutes Skew
+
+One of the most important practical results: **higher correlation reduces the basket skew relative to the individual stock skews**.
+
+Intuitively: when stocks are fully correlated ($\rho_{ij} = 1$), the basket behaves like a single stock scaled by $\sum_i w_i \sigma_i$, and the skew is the **weighted average** of individual skews. When correlation falls, diversification kicks in and the basket distribution becomes more Gaussian by CLT arguments.
+
+<Sketch title="Basket Skew vs. Correlation" caption="Schematic of basket 25Δ skew as a function of average pairwise correlation ρ̄. At ρ̄=1, skew equals the weighted avg stock skew. At ρ̄=0, basket skew converges to ~0 (Gaussian limit).">
+  <svg viewBox="0 0 520 280" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-[520px]">
+    {/* Grid lines */}
+    {[0,1,2,3,4].map(i => (
+      <line key={`h${i}`} x1="60" y1={40 + i * 50} x2="480" y2={40 + i * 50}
+        stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+    ))}
+    {[0,1,2,3,4,5].map(i => (
+      <line key={`v${i}`} x1={60 + i * 84} y1="40" x2={60 + i * 84} y2="240"
+        stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
+    ))}
+
+    {/* Axes */}
+    <line x1="60" y1="240" x2="480" y2="240" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
+    <line x1="60" y1="40" x2="60" y2="240" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
+
+    {/* Basket skew curve (concave, from low at rho=0 to high at rho=1) */}
+    <path d="M 60 220 C 120 210, 200 190, 280 160 C 340 138, 400 110, 480 72"
+      stroke="#7aa2ff" strokeWidth="2" fill="none" strokeLinecap="round"/>
+
+    {/* Weighted avg stock skew line (flat reference) */}
+    <line x1="60" y1="72" x2="480" y2="72"
+      stroke="rgba(246,193,119,0.5)" strokeWidth="1.5" strokeDasharray="5,4"/>
+
+    {/* Gaussian limit dashed */}
+    <line x1="60" y1="220" x2="60" y2="40"
+      stroke="rgba(167,139,250,0.2)" strokeWidth="1" strokeDasharray="3,4"/>
+
+    {/* Axis labels */}
+    <text x="270" y="265" fill="rgba(154,163,178,0.7)" fontSize="11" textAnchor="middle" fontFamily="monospace">average correlation ρ̄</text>
+    <text x="20" y="145" fill="rgba(154,163,178,0.7)" fontSize="11" textAnchor="middle" fontFamily="monospace" transform="rotate(-90,20,145)">25Δ skew</text>
+
+    {/* Tick labels x */}
+    {["0", "0.2", "0.4", "0.6", "0.8", "1"].map((v, i) => (
+      <text key={v} x={60 + i * 84} y="256" fill="rgba(154,163,178,0.5)" fontSize="9" textAnchor="middle" fontFamily="monospace">{v}</text>
+    ))}
+
+    {/* Legend */}
+    <line x1="290" y1="190" x2="315" y2="190" stroke="#7aa2ff" strokeWidth="2"/>
+    <text x="320" y="194" fill="#9aa3b2" fontSize="10" fontFamily="sans-serif">Basket skew</text>
+    <line x1="290" y1="208" x2="315" y2="208" stroke="rgba(246,193,119,0.6)" strokeWidth="1.5" strokeDasharray="4,3"/>
+    <text x="320" y="212" fill="#9aa3b2" fontSize="10" fontFamily="sans-serif">Wtd avg stock skew</text>
+
+    {/* Annotation at rho=1 */}
+    <circle cx="480" cy="72" r="3" fill="#7aa2ff"/>
+    <text x="456" y="66" fill="rgba(122,162,255,0.7)" fontSize="9" textAnchor="middle" fontFamily="monospace">converge</text>
+  </svg>
+</Sketch>
+
+The **skew ratio** — basket skew divided by weighted average single-stock skew — can be approximated as:
+
+$$
+\text{SR}(\bar\rho) \approx \bar\rho \cdot \frac{\sigma_B}{\sum_i w_i \sigma_i}
+$$
+
+where $\bar\rho$ is the average pairwise correlation. This ratio is always $\leq 1$ since by Cauchy-Schwarz:
+
+$$
+\sigma_B = \sqrt{\mathbf{w}^\top \Sigma \mathbf{w}} \leq \sum_i w_i \sigma_i
+$$
+
+</Section>
+
+<Section number="05" title="Practical Implementation">
+
+## Implementation Notes
+
+In practice, the reconstruction is done numerically via **Monte Carlo simulation** of the basket under the calibrated single-stock surfaces:
+
+1. Calibrate each $S_i$ to a stochastic vol model (SABR, Heston, or SVI parametrization)
+2. Specify a correlation matrix $\rho$ (from historical estimation or calibration to index options)
+3. Simulate $B_T = \sum_i w_i S_i(T)$ under the joint distribution
+4. Extract the smile of $B_T$ from simulated payoffs via regression or direct histogram
+
+<Callout type="note">
+  For fast calibration loops, the moment-based approach (Sections 2–3) is preferred as a warm-start. The Monte Carlo step validates and refines the result.
+</Callout>
+
+### Correlation Sensitivity
+
+The key risk parameter for dispersion traders is $\partial \sigma_B / \partial \rho_{ij}$. From the ATM formula:
+
+$$
+\frac{\partial \sigma_B}{\partial \rho_{ij}} = \frac{w_i w_j \sigma_i \sigma_j}{\sigma_B}
+$$
+
+Large-weight stocks with high individual vols dominate the sensitivity. This is the core of the **correlation risk** in dispersion books.
+
+| Parameter | Impact on Basket Skew | Sign |
+|-----------|----------------------|------|
+| ↑ Correlation | Increases basket skew | + |
+| ↑ Weight concentration | Increases basket skew | + |
+| ↑ Stock count (equal weights) | Decreases basket skew (CLT) | − |
+| ↑ Individual stock skew | Increases basket skew | + |
+
+<Callout type="result">
+  **Dispersion trade intuition**: Long dispersion (long single-stock vol, short index vol) profits when realized correlation is lower than the implied level embedded in the index smile. The skew differential is the forward-looking indicator of this trade's value.
+</Callout>
+
+</Section>

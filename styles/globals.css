@@ -1,0 +1,306 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── KaTeX ────────────────────────────────────────────────────── */
+@import "katex/dist/katex.min.css";
+
+/* ─── Custom Properties ─────────────────────────────────────────── */
+:root {
+  --sidebar-width: 272px;
+  --topbar-height: 56px;
+  --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Font stacks — system fonts, no network required */
+  --font-display: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, "Times New Roman", serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Fira Code", "Cascadia Code", "Consolas", "Monaco", "Courier New", monospace;
+}
+
+/* ─── Base Reset ─────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: #07090f;
+  color: #e8ecf5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(122, 162, 255, 0.15);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(122, 162, 255, 0.3);
+}
+
+/* ─── Selection ──────────────────────────────────────────────────── */
+::selection {
+  background: rgba(122, 162, 255, 0.25);
+  color: #e8ecf5;
+}
+
+/* ─── Focus Outline ──────────────────────────────────────────────── */
+:focus-visible {
+  outline: 1.5px solid rgba(122, 162, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* ─── Star Field ─────────────────────────────────────────────────── */
+.star-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.star {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  background: white;
+  border-radius: 50%;
+}
+
+.star-twinkle {
+  animation: twinkle var(--duration, 4s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: var(--min-opacity, 0.1); }
+  50% { opacity: var(--max-opacity, 0.5); }
+}
+
+/* ─── Shooting star ──────────────────────────────────────────────── */
+.shooting-star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: linear-gradient(90deg, #ffffff, transparent);
+  border-radius: 50%;
+  animation: shoot var(--shoot-duration, 6s) ease-in-out infinite;
+  animation-delay: var(--shoot-delay, 0s);
+  opacity: 0;
+}
+
+@keyframes shoot {
+  0% {
+    transform: translateX(0) translateY(0) scaleX(1);
+    opacity: 0;
+  }
+  5% { opacity: 0.8; }
+  15% {
+    transform: translateX(300px) translateY(150px) scaleX(60);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(300px) translateY(150px) scaleX(60);
+    opacity: 0;
+  }
+}
+
+/* ─── Sidebar comet trail ────────────────────────────────────────── */
+.sidebar-item-active {
+  position: relative;
+}
+
+.sidebar-item-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  border-radius: 0 2px 2px 0;
+  background: #7aa2ff;
+  box-shadow: 0 0 8px rgba(122, 162, 255, 0.6), 0 0 16px rgba(122, 162, 255, 0.2);
+}
+
+.sidebar-item-active::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(90deg, rgba(122, 162, 255, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  border-radius: 0 4px 4px 0;
+}
+
+/* ─── KaTeX overrides ────────────────────────────────────────────── */
+.katex {
+  font-size: 1em;
+  color: #e8ecf5;
+}
+
+.katex-display {
+  margin: 2em 0;
+  overflow-x: auto;
+  padding: 0.5em 0;
+}
+
+.katex-display > .katex {
+  color: #e8ecf5;
+}
+
+/* ─── Prose customizations ───────────────────────────────────────── */
+.prose-stella table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.prose-stella thead th:first-child { border-radius: 8px 0 0 0; }
+.prose-stella thead th:last-child  { border-radius: 0 8px 0 0; }
+
+.prose-stella thead tr {
+  background: rgba(122, 162, 255, 0.04);
+}
+
+/* ─── Glow utilities ─────────────────────────────────────────────── */
+@layer utilities {
+  .glow-blue {
+    box-shadow: 0 0 20px rgba(122, 162, 255, 0.15);
+  }
+  .glow-blue-sm {
+    box-shadow: 0 0 10px rgba(122, 162, 255, 0.1);
+  }
+  .glow-violet {
+    box-shadow: 0 0 20px rgba(167, 139, 250, 0.15);
+  }
+  .glow-gold {
+    box-shadow: 0 0 20px rgba(246, 193, 119, 0.12);
+  }
+  .text-glow-blue {
+    text-shadow: 0 0 20px rgba(122, 162, 255, 0.5);
+  }
+  .gradient-separator {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(122, 162, 255, 0.15) 30%,
+      rgba(167, 139, 250, 0.1) 60%,
+      transparent 100%
+    );
+  }
+}
+
+/* ─── Page transition ────────────────────────────────────────────── */
+.page-enter {
+  animation: pageEnter 0.35s ease forwards;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Sidebar hover trail ────────────────────────────────────────── */
+.nav-item {
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.nav-item::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(122, 162, 255, 0.06) 0%, transparent 100%);
+  transition: width 0.3s var(--transition-smooth);
+  pointer-events: none;
+  border-radius: 0 4px 4px 0;
+}
+
+.nav-item:hover::after {
+  width: 100%;
+}
+
+/* ─── Math block inner glow ──────────────────────────────────────── */
+.math-block-inner {
+  position: relative;
+}
+
+.math-block-inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 100%, rgba(122, 162, 255, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ─── Sketch block depth ─────────────────────────────────────────── */
+.sketch-frame {
+  position: relative;
+}
+
+.sketch-frame::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(122, 162, 255, 0.1), rgba(167, 139, 250, 0.05), transparent);
+  z-index: -1;
+}
+
+/* ─── Search highlight ───────────────────────────────────────────── */
+mark {
+  background: rgba(122, 162, 255, 0.25);
+  color: #e8ecf5;
+  padding: 0.05em 0.2em;
+  border-radius: 2px;
+}
+
+/* ─── Note card hover ────────────────────────────────────────────── */
+.note-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.note-card:hover {
+  border-color: rgba(122,162,255,0.12);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 20px rgba(122,162,255,0.05);
+}
+
+/* ─── Responsive layout ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 0px;
+  }
+}
