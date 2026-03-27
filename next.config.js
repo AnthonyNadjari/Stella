@@ -1,13 +1,15 @@
+const isProd = process.env.NODE_ENV === "production";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "export",
   trailingSlash: true,
+  basePath: isProd ? "/Stella" : "",
+  assetPrefix: isProd ? "/Stella/" : "",
   images: {
     unoptimized: true,
   },
-  // Support MDX
   pageExtensions: ["ts", "tsx", "js", "jsx", "md", "mdx"],
-  // Increase static generation timeout
   staticPageGenerationTimeout: 180,
 };
 
