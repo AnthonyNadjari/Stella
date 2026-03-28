@@ -21,27 +21,20 @@ export default function HomePage() {
 
           {/* Constellation mark */}
           <div className="shrink-0 mt-1.5">
-            <svg viewBox="0 0 48 48" fill="none" className="w-11 h-11">
-              <circle cx="24" cy="24" r="3.5" fill="var(--accent)" />
-              <circle cx="24" cy="24" r="8" fill="var(--accent)" opacity="0.06" />
-              <circle cx="24" cy="24" r="14" fill="var(--accent)" opacity="0.02" />
+            <svg viewBox="0 0 48 48" fill="none" className="w-10 h-10">
+              <circle cx="24" cy="24" r="3" fill="var(--accent)" />
+              <circle cx="24" cy="24" r="8" fill="var(--accent)" opacity="0.05" />
               {([
                 [7,7],[41,7],[7,41],[41,41],
                 [24,4],[4,24],[44,24],[24,44],
-                [12,12],[36,12],[12,36],[36,36],
               ] as [number,number][]).map(([x,y],i) => (
-                <circle key={i} cx={x} cy={y} r={i<4?1.4:i<8?0.9:0.6}
-                  fill="var(--accent)" opacity={i<4?0.55:i<8?0.3:0.15} />
+                <circle key={i} cx={x} cy={y} r={i<4?1.3:0.8}
+                  fill="var(--accent)" opacity={i<4?0.5:0.25} />
               ))}
               {([[24,24,7,7],[24,24,41,7],[24,24,7,41],[24,24,41,41]] as [number,number,number,number][]).map(([x1,y1,x2,y2],i)=>(
                 <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
-                  stroke="var(--accent)" strokeWidth="0.5" opacity="0.15"/>
+                  stroke="var(--accent)" strokeWidth="0.4" opacity="0.12"/>
               ))}
-              {/* Extra faint outer ring dots */}
-              {[30,60,120,150,210,240,300,330].map((a) => {
-                const r = 22, x = 24 + r*Math.cos(a*Math.PI/180), y = 24 + r*Math.sin(a*Math.PI/180);
-                return <circle key={a} cx={x} cy={y} r={0.4} fill="var(--violet)" opacity={0.25}/>;
-              })}
             </svg>
           </div>
 
@@ -58,7 +51,7 @@ export default function HomePage() {
                 style={{
                   color: "var(--accent)",
                   background: "var(--accent-dim)",
-                  border: "1px solid rgba(122,162,255,0.15)",
+                  border: "1px solid var(--border-mid)",
                 }}
               >
                 v0.1
@@ -71,13 +64,10 @@ export default function HomePage() {
         </div>
 
         {/* Stats bar */}
-        <div
-          className="stella-stats flex items-center gap-0 rounded-xl overflow-hidden"
-          style={{ fontFamily: "var(--font-mono)" }}
-        >
+        <div className="stella-stats flex items-center gap-0 rounded-xl overflow-hidden">
           {[
             { value: totalNotes, label: "notes" },
-            { value: Object.keys(byCategory).length, label: Object.keys(byCategory).length === 1 ? "category" : "categories" },
+            { value: Object.keys(byCategory).length, label: "categories" },
             { value: totalConcepts, label: "concepts" },
           ].map(({ value, label }, i) => (
             <div
@@ -86,17 +76,17 @@ export default function HomePage() {
               style={{ borderRight: i < 2 ? "1px solid var(--border)" : undefined }}
             >
               <span
-                className="text-2xl font-semibold tabular-nums gradient-text"
-                style={{ fontFamily: "var(--font-display)" }}
+                className="text-2xl font-semibold tabular-nums"
+                style={{ fontFamily: "var(--font-display)", color: "var(--accent)" }}
               >
                 {value}
               </span>
-              <span className="text-xs" style={{ color: "var(--text-4)" }}>{label}</span>
+              <span className="text-xs font-mono" style={{ color: "var(--text-4)" }}>{label}</span>
             </div>
           ))}
           <div className="flex items-center gap-2 px-5">
             <div className="w-1.5 h-1.5 rounded-full animate-pulse-glow" style={{ background: "var(--accent)" }} />
-            <span className="text-[10px] tracking-widest" style={{ color: "var(--text-4)" }}>LIVE</span>
+            <span className="text-[10px] font-mono tracking-widest" style={{ color: "var(--text-4)" }}>LIVE</span>
           </div>
         </div>
       </section>
@@ -116,17 +106,17 @@ export default function HomePage() {
             <div key={category}>
               {/* Category header */}
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-[11px] font-mono tracking-widest uppercase" style={{ color: "var(--accent)" }}>
+                <span className="text-[10px] font-mono tracking-widest uppercase" style={{ color: "var(--accent)", opacity: 0.7 }}>
                   {category}
                 </span>
                 <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
                 <span className="text-[10px] font-mono" style={{ color: "var(--text-4)" }}>
-                  {notes.length} note{notes.length !== 1 ? "s" : ""}
+                  {notes.length}
                 </span>
               </div>
 
               {/* Note cards */}
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-2.5 sm:grid-cols-2">
                 {notes.map((note) => (
                   <Link key={note.path} href={`/notes/${note.path}`} className="note-card group block rounded-xl p-4">
                     <div className="flex items-start justify-between gap-3 mb-2">
@@ -137,39 +127,26 @@ export default function HomePage() {
                         {note.title}
                       </h3>
                       <span
-                        className="text-sm font-mono shrink-0 mt-0.5 transition-colors group-hover:translate-x-0.5 transition-transform"
-                        style={{ color: "var(--accent)" }}
+                        className="shrink-0 mt-0.5 font-mono text-[13px] transition-transform group-hover:translate-x-0.5"
+                        style={{ color: "var(--text-4)" }}
                       >
                         →
                       </span>
                     </div>
 
                     {note.description && (
-                      <p className="text-[12.5px] leading-relaxed line-clamp-2 mb-2.5" style={{ color: "var(--text-4)" }}>
+                      <p className="text-[12.5px] leading-relaxed line-clamp-2" style={{ color: "var(--text-4)" }}>
                         {note.description}
                       </p>
                     )}
 
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {note.tags?.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-                          style={{
-                            color: "var(--accent)",
-                            background: "var(--accent-dim)",
-                            border: "1px solid rgba(122,162,255,0.1)",
-                          }}
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                      {note.readingTime && (
-                        <span className="ml-auto text-[10px] font-mono" style={{ color: "var(--text-4)" }}>
+                    {note.readingTime && (
+                      <div className="mt-2.5">
+                        <span className="text-[10px] font-mono" style={{ color: "var(--text-4)", opacity: 0.7 }}>
                           {note.readingTime}
                         </span>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </Link>
                 ))}
               </div>

@@ -66,8 +66,8 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
 
             <div>
               <div
-                className="text-[15px] font-semibold tracking-wider gradient-text transition-colors"
-                style={{ fontFamily: "var(--font-display)", letterSpacing: "0.12em" }}
+                className="text-[15px] font-semibold tracking-wider transition-colors"
+                style={{ fontFamily: "var(--font-display)", color: "var(--accent)", letterSpacing: "0.12em" }}
               >
                 STELLA
               </div>

@@ -184,9 +184,9 @@ body {
   50%      { opacity: 1;   box-shadow: 0 0 6px 2px var(--accent-glow); }
 }
 
-/* ─── Gradient text ──────────────────────────────────────────────── */
+/* ─── Gradient text — subtle 2-stop only ────────────────────────── */
 .gradient-text {
-  background: linear-gradient(120deg, var(--accent) 0%, var(--violet) 60%, var(--gold) 100%);
+  background: linear-gradient(135deg, var(--accent) 20%, var(--violet) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -367,6 +367,9 @@ html.light .mobile-toggle {
 }
 
 /* ─── Responsive ─────────────────────────────────────────────────── */
+.stella-topbar-offset { left: 272px; }
+
 @media (max-width: 767px) {
   .md-main { margin-left: 0 !important; }
+  .stella-topbar-offset { left: 0 !important; }
 }
