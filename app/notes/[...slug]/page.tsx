@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getAllNotePaths, getNoteByPath } from "@/lib/notes";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import remarkMath from "remark-math";
+import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import type { Metadata } from "next";
@@ -71,7 +72,7 @@ export default function NotePage({ params }: PageProps) {
           components={mdxComponents}
           options={{
             mdxOptions: {
-              remarkPlugins: [remarkMath],
+              remarkPlugins: [remarkMath, remarkGfm],
               rehypePlugins: [
                 rehypeKatex,
                 rehypeSlug,

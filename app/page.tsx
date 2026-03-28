@@ -10,136 +10,142 @@ export default function HomePage() {
   const allNotes = getAllNotes();
   const byCategory = getNotesByCategory();
   const totalNotes = allNotes.length;
+  const totalConcepts = allNotes.reduce((acc, n) => acc + (n.tags?.length || 0), 0);
 
   return (
     <div className="page-enter">
-      {/* Hero */}
-      <section className="mb-16 pt-4">
+
+      {/* ── Hero ─────────────────────────────────────────── */}
+      <section className="mb-16 pt-2">
         <div className="flex items-start gap-5 mb-8">
-          {/* Constellation icon */}
-          <div className="shrink-0 mt-1">
-            <svg viewBox="0 0 40 40" fill="none" className="w-10 h-10 opacity-80">
-              <circle cx="20" cy="20" r="3" fill="#7aa2ff" />
-              <circle cx="20" cy="20" r="3" fill="#7aa2ff" style={{ filter: "blur(4px)", opacity: 0.5 }} />
+
+          {/* Constellation mark */}
+          <div className="shrink-0 mt-1.5">
+            <svg viewBox="0 0 48 48" fill="none" className="w-11 h-11">
+              <circle cx="24" cy="24" r="3.5" fill="var(--accent)" />
+              <circle cx="24" cy="24" r="7" fill="var(--accent)" opacity="0.07" />
               {([
-                [8, 8], [32, 8], [8, 32], [32, 32],
-                [20, 4], [4, 20], [36, 20], [20, 36],
-              ] as [number, number][]).map(([x, y], i) => (
-                <circle key={i} cx={x} cy={y} r={i < 4 ? 1.2 : 0.8} fill="#7aa2ff" opacity={i < 4 ? 0.5 : 0.3} />
+                [7,7],[41,7],[7,41],[41,41],
+                [24,4],[4,24],[44,24],[24,44],
+                [12,12],[36,12],[12,36],[36,36],
+              ] as [number,number][]).map(([x,y],i) => (
+                <circle key={i} cx={x} cy={y} r={i<4?1.4:i<8?0.9:0.6}
+                  fill="var(--accent)" opacity={i<4?0.55:i<8?0.3:0.15} />
               ))}
-              {([[20, 20, 8, 8], [20, 20, 32, 8], [20, 20, 8, 32], [20, 20, 32, 32]] as [number,number,number,number][]).map(
-                ([x1, y1, x2, y2], i) => (
-                  <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#7aa2ff" strokeWidth="0.5" opacity="0.2" />
-                )
-              )}
+              {([[24,24,7,7],[24,24,41,7],[24,24,7,41],[24,24,41,41]] as [number,number,number,number][]).map(([x1,y1,x2,y2],i)=>(
+                <line key={i} x1={x1} y1={y1} x2={x2} y2={y2}
+                  stroke="var(--accent)" strokeWidth="0.5" opacity="0.15"/>
+              ))}
             </svg>
           </div>
+
           <div>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-3">
               <h1
-                className="font-display text-4xl font-semibold text-ink-100 tracking-tight"
-                style={{ letterSpacing: "-0.025em" }}
+                className="text-4xl md:text-5xl font-semibold tracking-tight"
+                style={{ fontFamily: "var(--font-display)", color: "var(--text-1)", letterSpacing: "-0.03em" }}
               >
                 STELLA
               </h1>
               <span
-                className="text-[10px] font-mono tracking-widest uppercase px-2 py-0.5 rounded"
+                className="text-[10px] font-mono tracking-widest uppercase self-start mt-2 px-2 py-0.5 rounded"
                 style={{
-                  color: "#7aa2ff",
-                  background: "rgba(122,162,255,0.07)",
-                  border: "1px solid rgba(122,162,255,0.12)",
+                  color: "var(--accent)",
+                  background: "var(--accent-dim)",
+                  border: "1px solid rgba(122,162,255,0.15)",
                 }}
               >
                 v0.1
               </span>
             </div>
-            <p className="text-base text-ink-400 leading-relaxed max-w-xl">
-              A structured knowledge system for quantitative finance. Notes on derivatives,
-              volatility models, structured products, and mathematical finance — built for depth,
-              not breadth.
+            <p className="text-[15px] leading-relaxed max-w-lg" style={{ color: "var(--text-3)" }}>
+              A structured knowledge system for quantitative finance — derivatives pricing, volatility models, and structured products. Built for depth, not breadth.
             </p>
           </div>
         </div>
 
         {/* Stats bar */}
         <div
-          className="flex items-center gap-8 py-4 px-5 rounded-xl"
-          style={{
-            background: "rgba(255,255,255,0.02)",
-            border: "1px solid rgba(255,255,255,0.05)",
-          }}
+          className="stella-stats flex items-center gap-0 rounded-xl overflow-hidden"
+          style={{ fontFamily: "var(--font-mono)" }}
         >
           {[
-            { value: totalNotes, label: "notes" },
-            { value: Object.keys(byCategory).length, label: "categories" },
-            { value: allNotes.reduce((acc, n) => acc + (n.tags?.length || 0), 0), label: "concepts" },
-          ].map(({ value, label }) => (
-            <div key={label} className="flex items-baseline gap-1.5">
-              <span className="text-xl font-display font-semibold text-ink-100">{value}</span>
-              <span className="text-xs text-ink-600 font-mono">{label}</span>
+            { value: totalNotes, label: "notes", suffix: "" },
+            { value: Object.keys(byCategory).length, label: "categor" + (Object.keys(byCategory).length === 1 ? "y" : "ies"), suffix: "" },
+            { value: totalConcepts, label: "concepts", suffix: "" },
+          ].map(({ value, label }, i) => (
+            <div
+              key={label}
+              className="flex items-baseline gap-2 px-5 py-4 flex-1"
+              style={{ borderRight: i < 2 ? "1px solid var(--border)" : undefined }}
+            >
+              <span
+                className="text-2xl font-semibold tabular-nums"
+                style={{ fontFamily: "var(--font-display)", color: "var(--text-1)" }}
+              >
+                {value}
+              </span>
+              <span className="text-xs" style={{ color: "var(--text-4)" }}>{label}</span>
             </div>
           ))}
-          <div className="ml-auto flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-comet-blue animate-pulse-glow" />
-            <span className="text-xs text-ink-600 font-mono">continuously updated</span>
+          <div className="flex items-center gap-2 px-5">
+            <div
+              className="w-1.5 h-1.5 rounded-full animate-pulse-glow"
+              style={{ background: "var(--accent)" }}
+            />
+            <span className="text-[10px] tracking-widest" style={{ color: "var(--text-4)" }}>LIVE</span>
           </div>
         </div>
       </section>
 
-      {/* Categories */}
+      {/* ── Knowledge graph ───────────────────────────────── */}
       <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div
-              className="h-px w-8"
-              style={{
-                background:
-                  "linear-gradient(90deg, rgba(122,162,255,0.4), transparent)",
-              }}
-            />
-            <span className="text-[10px] font-mono text-ink-600 tracking-widest uppercase">
-              Knowledge Graph
-            </span>
-          </div>
+        <div className="flex items-center gap-3 mb-7">
+          <div className="h-px w-6" style={{ background: "linear-gradient(90deg, var(--accent), transparent)" }} />
+          <span className="text-[10px] font-mono tracking-widest uppercase" style={{ color: "var(--text-4)" }}>
+            Knowledge Graph
+          </span>
+          <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-10">
           {Object.entries(byCategory).map(([category, notes]) => (
             <div key={category}>
               {/* Category header */}
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-xs font-mono tracking-widest uppercase text-comet-blue">
+              <div className="flex items-center gap-3 mb-4">
+                <span
+                  className="text-[11px] font-mono tracking-widest uppercase"
+                  style={{ color: "var(--accent)" }}
+                >
                   {category}
                 </span>
-                <div
-                  className="flex-1 h-px"
-                  style={{
-                    background:
-                      "linear-gradient(90deg, rgba(255,255,255,0.06) 0%, transparent 100%)",
-                  }}
-                />
-                <span className="text-[10px] text-ink-600 font-mono">{notes.length}</span>
+                <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+                <span className="text-[10px] font-mono" style={{ color: "var(--text-4)" }}>
+                  {notes.length} note{notes.length !== 1 ? "s" : ""}
+                </span>
               </div>
 
-              {/* Notes grid */}
+              {/* Note cards */}
               <div className="grid gap-3 sm:grid-cols-2">
                 {notes.map((note) => (
-                  <Link
-                    key={note.path}
-                    href={`/notes/${note.path}`}
-                    className="note-card group block rounded-xl p-5 transition-all duration-300 hover:-translate-y-0.5"
-                  >
+                  <Link key={note.path} href={`/notes/${note.path}`} className="note-card group block rounded-xl p-5">
                     <div className="flex items-start justify-between gap-3 mb-3">
-                      <h3 className="font-display text-base font-medium text-ink-100 leading-snug group-hover:text-white transition-colors">
+                      <h3
+                        className="text-[15px] font-medium leading-snug"
+                        style={{ fontFamily: "var(--font-display)", color: "var(--text-1)" }}
+                      >
                         {note.title}
                       </h3>
-                      <span className="text-[10px] font-mono text-ink-600 shrink-0 mt-0.5 group-hover:text-comet-blue transition-colors">
+                      <span
+                        className="text-xs font-mono shrink-0 mt-0.5 transition-colors"
+                        style={{ color: "var(--text-4)" }}
+                      >
                         →
                       </span>
                     </div>
 
                     {note.description && (
-                      <p className="text-sm text-ink-600 leading-relaxed line-clamp-2 mb-3">
+                      <p className="text-sm leading-relaxed line-clamp-2 mb-3" style={{ color: "var(--text-4)" }}>
                         {note.description}
                       </p>
                     )}
@@ -148,13 +154,18 @@ export default function HomePage() {
                       {note.tags?.slice(0, 3).map((tag) => (
                         <span
                           key={tag}
-                          className="text-[10px] font-mono text-ink-600 px-1.5 py-0.5 rounded bg-white/3 border border-white/5"
+                          className="text-[10px] font-mono px-1.5 py-0.5 rounded"
+                          style={{
+                            color: "var(--text-4)",
+                            background: "var(--surface-2)",
+                            border: "1px solid var(--border)",
+                          }}
                         >
                           {tag}
                         </span>
                       ))}
                       {note.readingTime && (
-                        <span className="ml-auto text-[10px] text-ink-600 font-mono">
+                        <span className="ml-auto text-[10px] font-mono" style={{ color: "var(--text-4)" }}>
                           {note.readingTime}
                         </span>
                       )}
@@ -167,11 +178,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="pt-8 pb-4 border-t border-white/4">
-        <p className="text-xs text-ink-600 text-center">
-          STELLA · Quantitative Finance Knowledge System ·{" "}
-          <span className="font-mono">v0.1.0</span>
+      {/* ── Footer ───────────────────────────────────────── */}
+      <footer className="pt-8 pb-4" style={{ borderTop: "1px solid var(--border)" }}>
+        <p className="text-[11px] font-mono text-center" style={{ color: "var(--text-4)" }}>
+          STELLA · Quantitative Finance Knowledge System · <span>v0.1.0</span>
         </p>
       </footer>
     </div>

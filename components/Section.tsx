@@ -10,31 +10,32 @@ export default function Section({ number, title, children }: SectionProps) {
   const id = title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
   return (
-    <section id={id} className="my-12 scroll-mt-20">
-      {/* Section header */}
-      <div className="flex items-baseline gap-4 mb-6">
+    <section id={id} className="my-14 scroll-mt-20">
+      <div className="flex items-center gap-4 mb-5">
         {number && (
-          <span className="font-mono text-[11px] text-comet-blue opacity-60 shrink-0 tracking-widest">
-            {number.padStart(2, "0")}
+          <span
+            className="font-mono text-[11px] tracking-widest shrink-0 tabular-nums"
+            style={{ color: "var(--accent)", opacity: 0.55 }}
+          >
+            {String(number).padStart(2, "0")}
           </span>
         )}
-        <div className="flex-1">
-          <h2 className="font-display text-xl font-semibold text-ink-100 tracking-tight leading-tight">
-            {title}
-          </h2>
-        </div>
+        <h2
+          className="text-xl font-semibold leading-tight tracking-tight"
+          style={{ fontFamily: "var(--font-display)", color: "var(--text-1)", letterSpacing: "-0.02em" }}
+        >
+          {title}
+        </h2>
       </div>
 
-      {/* Gradient separator line */}
+      {/* Separator */}
       <div
-        className="h-px mb-6"
+        className="h-px mb-7"
         style={{
-          background:
-            "linear-gradient(90deg, rgba(122,162,255,0.2) 0%, rgba(167,139,250,0.08) 40%, transparent 100%)",
+          background: "linear-gradient(90deg, var(--accent-dim) 0%, rgba(167,139,250,0.06) 50%, transparent 100%)",
         }}
       />
 
-      {/* Content */}
       <div>{children}</div>
     </section>
   );
