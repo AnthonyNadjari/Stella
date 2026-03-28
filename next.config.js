@@ -11,6 +11,15 @@ const nextConfig = {
   },
   pageExtensions: ["ts", "tsx", "js", "jsx", "md", "mdx"],
   staticPageGenerationTimeout: 180,
+  // Force webpack to transpile ESM-only packages (remark/rehype ecosystem)
+  transpilePackages: [
+    "next-mdx-remote",
+    "remark-gfm",
+    "remark-math",
+    "rehype-katex",
+    "rehype-slug",
+    "rehype-autolink-headings",
+  ],
 };
 
 module.exports = nextConfig;
