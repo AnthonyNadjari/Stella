@@ -167,12 +167,7 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="md:hidden fixed top-3.5 left-4 z-50 p-1.5 rounded-md transition-colors"
-        style={{
-          background: "var(--surface-2)",
-          border: "1px solid var(--border-mid)",
-          color: "var(--text-3)",
-        }}
+        className="mobile-toggle md:hidden fixed top-3.5 left-4 z-50 p-1.5 rounded-md transition-colors"
         aria-label="Toggle menu"
       >
         {mobileOpen ? <X size={18} /> : <Menu size={18} />}
