@@ -74,14 +74,22 @@ html.light {
 html { scroll-behavior: smooth; }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
+  /* Ambient nebula — as bg-image, not fixed divs (avoids iOS Safari circle bug) */
+  background-image:
+    radial-gradient(ellipse 80% 40% at 60% 0%, rgba(96,165,250,0.07) 0%, transparent 100%),
+    radial-gradient(ellipse 60% 50% at 15% 80%, rgba(192,132,252,0.05) 0%, transparent 100%);
   color: var(--text-1);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   overflow-x: hidden;
-  transition: background 0.25s ease, color 0.25s ease;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+html.light body {
+  background-image: none;
 }
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
