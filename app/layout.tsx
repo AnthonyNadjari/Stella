@@ -11,58 +11,39 @@ export const metadata: Metadata = {
     template: "%s · STELLA",
   },
   description:
-    "A premium knowledge platform for quantitative finance professionals. Explore structured notes on volatility, equity derivatives, rates, and more.",
-  keywords: ["quant finance", "volatility", "derivatives", "structured products", "knowledge base"],
+    "A premium knowledge platform for quantitative finance professionals.",
+  keywords: ["quant finance", "volatility", "derivatives", "structured products"],
 };
 
-export const viewport: Viewport = {
-  themeColor: "#07090f",
-};
+export const viewport: Viewport = { themeColor: "#050710" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const notesByCategory = getNotesByCategory();
   const searchIndex = getSearchIndex();
 
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <body
-        className="font-body bg-space-950 text-ink-100 antialiased"
-      >
-        {/* Cosmic background */}
-        <StarField />
-
-        {/* Background radial glow */}
-        <div
-          className="fixed inset-0 pointer-events-none z-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 60% at 50% -20%, rgba(122,162,255,0.04) 0%, transparent 70%)",
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('stella-theme');document.documentElement.classList.add(t==='light'?'light':'dark');}catch(e){document.documentElement.classList.add('dark');}})();`,
           }}
         />
+      </head>
+      <body style={{ fontFamily: "var(--font-body)" }}>
+        {/* Starfield canvas */}
+        <StarField />
 
-        {/* Layout */}
+        {/* Sidebar */}
         <Sidebar notesByCategory={notesByCategory} />
 
-        <div
-          className="relative z-10 flex flex-col min-h-screen"
-          style={{ marginLeft: "272px" }}
-        >
+        {/* Main */}
+        <div className="relative z-10 flex flex-col min-h-screen md-main" style={{ marginLeft: "260px" }}>
           <Topbar searchIndex={searchIndex} />
-
-          <main
-            className="flex-1 px-6 md:px-12 pb-16"
-            style={{ paddingTop: "calc(56px + 2.5rem)" }}
-          >
-            <div className="max-w-content mx-auto">{children}</div>
+          <main className="flex-1 px-6 md:px-10 pb-20" style={{ paddingTop: "calc(56px + 2rem)" }}>
+            <div style={{ maxWidth: 800, margin: "0 auto" }}>{children}</div>
           </main>
         </div>
-
-        {/* Mobile: no sidebar margin */}
-        <style>{`
-          @media (max-width: 767px) {
-            .relative.z-10.flex { margin-left: 0 !important; }
-          }
-        `}</style>
       </body>
     </html>
   );
