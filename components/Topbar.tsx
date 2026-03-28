@@ -181,7 +181,7 @@ export default function Topbar({ searchIndex }: TopbarProps) {
           onClick={(e) => { if (e.target === e.currentTarget) closeSearch(); }}
         >
           <div
-            className="stella-search-modal w-full max-w-[580px] rounded-xl overflow-hidden page-enter"
+            className="stella-search w-full max-w-[580px] rounded-xl overflow-hidden page-enter"
             style={{
               boxShadow: "0 0 0 1px var(--accent-dim), 0 24px 60px rgba(0,0,0,0.5), 0 0 80px var(--accent-dim)",
             }}

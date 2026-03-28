@@ -42,14 +42,12 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
             {/* Stella glyph */}
             <div className="relative w-8 h-8 shrink-0">
               <svg viewBox="0 0 32 32" fill="none" className="w-full h-full">
-                {/* Outer ring dots */}
                 {[0,45,90,135,180,225,270,315].map((a, i) => {
                   const r = 13;
                   const x = 16 + r * Math.cos((a * Math.PI) / 180);
                   const y = 16 + r * Math.sin((a * Math.PI) / 180);
                   return <circle key={a} cx={x} cy={y} r={i % 2 === 0 ? 1 : 0.6} fill="var(--accent)" opacity={i % 2 === 0 ? 0.7 : 0.3} />;
                 })}
-                {/* Connector lines */}
                 {[0,90,180,270].map((a) => {
                   const r1 = 5, r2 = 13;
                   return <line key={a}
@@ -60,18 +58,16 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
                     stroke="var(--accent)" strokeWidth="0.5" opacity="0.2"
                   />;
                 })}
-                {/* Core */}
                 <circle cx="16" cy="16" r="3" fill="var(--accent)" opacity="0.9" />
                 <circle cx="16" cy="16" r="5" fill="var(--accent)" opacity="0.08" />
               </svg>
-              {/* Glow */}
               <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(circle, var(--accent-dim) 0%, transparent 70%)" }} />
             </div>
 
             <div>
               <div
-                className="text-[15px] font-semibold tracking-wider transition-colors"
-                style={{ fontFamily: "var(--font-display)", color: "var(--text-1)", letterSpacing: "0.12em" }}
+                className="text-[15px] font-semibold tracking-wider gradient-text transition-colors"
+                style={{ fontFamily: "var(--font-display)", letterSpacing: "0.12em" }}
               >
                 STELLA
               </div>
@@ -89,17 +85,17 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
         <Link
           href="/"
           onClick={() => setMobileOpen(false)}
-          className={clsx("nav-item flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors",
-            pathname === "/" ? "sidebar-item-active" : ""
+          className={clsx(
+            "nav-link flex items-center gap-2.5 text-sm transition-all",
+            pathname === "/" ? "sidebar-active" : "sidebar-inactive"
           )}
-          style={{ color: pathname === "/" ? "var(--accent)" : "var(--text-3)" }}
         >
           <LayoutGrid size={12} className="shrink-0 opacity-70" />
           <span>Overview</span>
         </Link>
 
         {/* Separator */}
-        <div className="gradient-separator h-px my-3 mx-1" />
+        <div className="gradient-sep !mb-1 !mt-3 mx-1" />
 
         {/* Categories */}
         {orderedCategories.map((category) => {
@@ -112,21 +108,19 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
               <button
                 onClick={() => setCollapsed((p) => ({ ...p, [category]: !p[category] }))}
                 className="w-full flex items-center justify-between px-3 py-1.5 rounded-md transition-colors group"
+                style={{ color: "var(--text-4)" }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono w-3 text-center" style={{ color: "var(--accent)", opacity: 0.5 }}>
+                  <span className="text-[10px] font-mono w-3 text-center" style={{ color: "var(--accent)", opacity: 0.6 }}>
                     {icon}
                   </span>
-                  <span
-                    className="text-[10px] font-semibold tracking-widest uppercase transition-colors"
-                    style={{ color: "var(--text-4)", letterSpacing: "0.1em" }}
-                  >
+                  <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ letterSpacing: "0.1em" }}>
                     {category}
                   </span>
                 </div>
                 {isOpen
-                  ? <ChevronDown size={10} style={{ color: "var(--text-4)", opacity: 0.5 }} />
-                  : <ChevronRight size={10} style={{ color: "var(--text-4)", opacity: 0.5 }} />}
+                  ? <ChevronDown size={10} style={{ opacity: 0.4 }} />
+                  : <ChevronRight size={10} style={{ opacity: 0.4 }} />}
               </button>
 
               {isOpen && (
@@ -137,10 +131,9 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
                       href={`/notes/${note.path}`}
                       onClick={() => setMobileOpen(false)}
                       className={clsx(
-                        "nav-item block px-3 py-1.5 rounded-r-md text-[13px] leading-snug transition-colors truncate",
-                        isActive(note.path) ? "sidebar-item-active" : ""
+                        "nav-link block rounded-r-md text-[12.5px] leading-snug truncate transition-all",
+                        isActive(note.path) ? "sidebar-active" : "sidebar-inactive"
                       )}
-                      style={{ color: isActive(note.path) ? "var(--accent)" : "var(--text-3)" }}
                     >
                       {note.title}
                     </Link>
@@ -167,9 +160,7 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
   return (
     <>
       {/* Desktop */}
-      <aside
-        className="stella-sidebar constellation-bg hidden md:flex fixed left-0 top-0 bottom-0 flex-col w-[272px] z-30"
-      >
+      <aside className="stella-sidebar constellation-bg hidden md:flex fixed left-0 top-0 bottom-0 flex-col w-[272px] z-30">
         {content}
       </aside>
 

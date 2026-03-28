@@ -8,29 +8,29 @@ interface MathBlockProps {
 
 export default function MathBlock({ children, label, number }: MathBlockProps) {
   return (
-    <div className="my-8 group math-block-inner relative">
+    <div className="my-5 group relative">
       <div
         className="rounded-xl relative overflow-hidden"
         style={{
-          background: "var(--prose-pre-bg)",
+          background: "var(--pre-bg)",
           border: "1px solid var(--border-mid)",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)",
-          padding: "1.25rem 1.5rem",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03)",
+          padding: "1.1rem 1.4rem",
         }}
       >
         {/* Top gradient line */}
         <div
           className="absolute top-0 left-6 right-6 h-px"
-          style={{ background: "linear-gradient(90deg, transparent, var(--accent-dim), transparent)" }}
+          style={{ background: "linear-gradient(90deg, transparent, var(--accent-str), var(--violet), transparent)" }}
         />
 
         {/* Label row */}
         {(label || number) && (
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2.5">
             {label && (
               <span
                 className="text-[10px] font-mono tracking-widest uppercase"
-                style={{ color: "var(--accent)", opacity: 0.55 }}
+                style={{ color: "var(--accent)", opacity: 0.7 }}
               >
                 {label}
               </span>

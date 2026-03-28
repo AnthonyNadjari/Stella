@@ -22,19 +22,39 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const searchIndex = getSearchIndex();
 
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('stella-theme');document.documentElement.classList.add(t==='light'?'light':'dark');}catch(e){document.documentElement.classList.add('dark');}})();`,
+          }}
+        />
+      </head>
       <body style={{ fontFamily: "var(--font-body)" }}>
         {/* Animated star field — hidden in light mode via CSS var */}
         <StarField />
 
-        {/* Ambient radial glow */}
-        <div
-          className="fixed inset-0 pointer-events-none z-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 90% 55% at 50% -10%, rgba(122,162,255,0.06) 0%, transparent 65%)",
-          }}
-        />
+        {/* Deep space ambient glows */}
+        <div className="fixed inset-0 pointer-events-none z-0" aria-hidden="true">
+          {/* Top radial glow */}
+          <div style={{
+            position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+            width: "80%", height: "50%",
+            background: "radial-gradient(ellipse at 50% 0%, rgba(122,162,255,0.07) 0%, transparent 65%)",
+          }} />
+          {/* Bottom-left violet nebula */}
+          <div style={{
+            position: "absolute", bottom: "-10%", left: "-5%",
+            width: "55%", height: "55%",
+            background: "radial-gradient(ellipse at 20% 80%, rgba(167,139,250,0.04) 0%, transparent 60%)",
+          }} />
+          {/* Right accent */}
+          <div style={{
+            position: "absolute", top: "30%", right: "-5%",
+            width: "40%", height: "40%",
+            background: "radial-gradient(ellipse at 80% 40%, rgba(122,162,255,0.04) 0%, transparent 60%)",
+          }} />
+        </div>
 
         {/* Sidebar */}
         <Sidebar notesByCategory={notesByCategory} />

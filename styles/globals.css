@@ -6,63 +6,69 @@
 
 /* ─── Design tokens ──────────────────────────────────────────────── */
 :root {
-  /* Dark (default) */
+  /* Dark (default) — deep space */
   --bg:             #07090f;
-  --surface:        #0e1220;
-  --surface-2:      #141826;
-  --surface-3:      #1b2135;
-  --border:         rgba(255,255,255,0.05);
-  --border-mid:     rgba(255,255,255,0.09);
-  --text-1:         #e8ecf5;
-  --text-2:         #b0b8cc;
-  --text-3:         #9aa3b2;
-  --text-4:         #5c6478;
+  --bg-2:           #0a0d18;
+  --surface:        #0d1120;
+  --surface-2:      #131828;
+  --surface-3:      #1a2035;
+  --border:         rgba(122,162,255,0.08);
+  --border-mid:     rgba(122,162,255,0.14);
+  --text-1:         #edf0fa;
+  --text-2:         #b8c2d8;
+  --text-3:         #8892aa;
+  --text-4:         #4e5870;
   --accent:         #7aa2ff;
-  --accent-dim:     rgba(122,162,255,0.12);
-  --accent-glow:    rgba(122,162,255,0.25);
+  --accent-dim:     rgba(122,162,255,0.10);
+  --accent-glow:    rgba(122,162,255,0.28);
+  --accent-str:     rgba(122,162,255,0.5);
   --violet:         #a78bfa;
+  --violet-dim:     rgba(167,139,250,0.10);
   --gold:           #f6c177;
-  --sidebar-bg:     linear-gradient(170deg, #060810 0%, #080c18 40%, #070a16 100%);
-  --topbar-bg:      rgba(6,8,14,0.88);
-  --topbar-border:  rgba(255,255,255,0.04);
-  --prose-code-bg:  #111828;
-  --prose-pre-bg:   #0c1022;
-  --star-opacity:   0.75;
+  --gold-dim:       rgba(246,193,119,0.10);
+  --sidebar-bg:     linear-gradient(170deg,#060810 0%,#070b18 50%,#060914 100%);
+  --topbar-bg:      rgba(5,7,14,0.90);
+  --topbar-border:  rgba(122,162,255,0.07);
+  --code-bg:        #0c1022;
+  --pre-bg:         #090f1e;
+  --star-opacity:   1;
 
-  --sidebar-width: 272px;
-  --topbar-height: 56px;
   --font-display: "Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
   --font-body: -apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
   --font-mono: "Cascadia Code","Fira Code",Consolas,Monaco,"Courier New",monospace;
 }
 
 html.light {
-  --bg:             #f0f2f8;
+  /* Light — deep dawn, blue-tinted */
+  --bg:             #f0f3ff;
+  --bg-2:           #eaedff;
   --surface:        #ffffff;
-  --surface-2:      #e8ecf5;
-  --surface-3:      #dde2ef;
-  --border:         rgba(0,0,0,0.07);
-  --border-mid:     rgba(0,0,0,0.12);
-  --text-1:         #111526;
-  --text-2:         #2e3450;
-  --text-3:         #4a5270;
-  --text-4:         #7a839a;
-  --accent:         #3b6de8;
-  --accent-dim:     rgba(59,109,232,0.1);
-  --accent-glow:    rgba(59,109,232,0.2);
-  --violet:         #6d4fe8;
-  --gold:           #c47c1a;
-  --sidebar-bg:     linear-gradient(170deg, #e4e8f5 0%, #eaecf8 40%, #e2e6f2 100%);
-  --topbar-bg:      rgba(240,242,248,0.92);
-  --topbar-border:  rgba(0,0,0,0.07);
-  --prose-code-bg:  #eaecf5;
-  --prose-pre-bg:   #f5f6fa;
+  --surface-2:      #e8ecfb;
+  --surface-3:      #dce2f5;
+  --border:         rgba(61,100,210,0.10);
+  --border-mid:     rgba(61,100,210,0.18);
+  --text-1:         #0d1130;
+  --text-2:         #2a3260;
+  --text-3:         #4a5480;
+  --text-4:         #7a85a8;
+  --accent:         #2554d0;
+  --accent-dim:     rgba(37,84,208,0.10);
+  --accent-glow:    rgba(37,84,208,0.22);
+  --accent-str:     rgba(37,84,208,0.5);
+  --violet:         #6d3fd8;
+  --violet-dim:     rgba(109,63,216,0.10);
+  --gold:           #b06010;
+  --gold-dim:       rgba(176,96,16,0.10);
+  --sidebar-bg:     linear-gradient(170deg,#e2e8ff 0%,#e8ecff 60%,#dfe5ff 100%);
+  --topbar-bg:      rgba(240,243,255,0.94);
+  --topbar-border:  rgba(61,100,210,0.12);
+  --code-bg:        #e8ecfb;
+  --pre-bg:         #edf0ff;
   --star-opacity:   0;
 }
 
 /* ─── Base ───────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
-
 html { scroll-behavior: smooth; }
 
 body {
@@ -73,52 +79,47 @@ body {
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   overflow-x: hidden;
-  transition: background 0.3s ease, color 0.3s ease;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
-/* ─── Scrollbar ──────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--accent-dim); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(122,162,255,0.3); }
-
+::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-str); }
 ::selection { background: var(--accent-dim); color: var(--text-1); }
-:focus-visible { outline: 1.5px solid var(--accent-glow); outline-offset: 2px; }
+:focus-visible { outline: 1.5px solid var(--accent-str); outline-offset: 2px; }
 
-/* ─── Sidebar ────────────────────────────────────────────────────── */
+/* ─── Structural ─────────────────────────────────────────────────── */
 .stella-sidebar {
   background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
-  transition: background 0.3s ease;
+  transition: background 0.25s ease;
 }
 
-/* ─── Topbar ─────────────────────────────────────────────────────── */
 .stella-topbar {
   background: var(--topbar-bg);
   border-bottom: 1px solid var(--topbar-border);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  transition: background 0.3s ease;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-/* ─── Themed surfaces ────────────────────────────────────────────── */
-.stella-surface {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  transition: background 0.3s ease, border-color 0.2s ease;
+/* ─── Sidebar active — simple, no pseudo-element bugs ───────────── */
+.sidebar-active {
+  color: var(--accent) !important;
+  background: var(--accent-dim);
+  border-left: 2px solid var(--accent);
+  box-shadow: inset 4px 0 12px var(--accent-dim);
 }
 
-.stella-surface-2 {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+.sidebar-inactive {
+  color: var(--text-3);
+  border-left: 2px solid transparent;
 }
 
-/* ─── Text utilities ─────────────────────────────────────────────── */
-.text-1 { color: var(--text-1); }
-.text-2 { color: var(--text-2); }
-.text-3 { color: var(--text-3); }
-.text-4 { color: var(--text-4); }
-.text-accent { color: var(--accent); }
+.sidebar-inactive:hover {
+  color: var(--text-2);
+  background: var(--accent-dim);
+}
 
 /* ─── Note cards ─────────────────────────────────────────────────── */
 .note-card {
@@ -126,223 +127,148 @@ body {
   border: 1px solid var(--border);
   position: relative;
   overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 
 .note-card::before {
   content: "";
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  left: 0; top: 0; bottom: 0;
   width: 2px;
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--accent), var(--violet));
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s;
 }
 
 .note-card:hover {
   border-color: var(--border-mid);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.2), 0 0 0 1px var(--accent-dim);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 0 0 1px var(--accent-dim);
   transform: translateY(-1px);
 }
 
-.note-card:hover::before {
-  opacity: 0.6;
-}
-
-/* ─── Sidebar active comet trail ─────────────────────────────────── */
-.sidebar-item-active {
-  color: var(--accent) !important;
-  background: var(--accent-dim);
-  position: relative;
-}
-
-.sidebar-item-active::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 2.5px;
-  height: 55%;
-  border-radius: 0 2px 2px 0;
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent-glow), 0 0 18px var(--accent-dim);
-}
-
-.sidebar-item-active::after {
-  content: "";
-  position: absolute;
-  left: 2.5px;
-  top: 0;
-  bottom: 0;
-  width: 80%;
-  background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 100%);
-  pointer-events: none;
-}
-
-/* ─── Nav item hover ─────────────────────────────────────────────── */
-.nav-item {
-  position: relative;
-  transition: color 0.15s ease;
-}
-
-.nav-item::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 100%);
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-.nav-item:hover::after { opacity: 1; }
+.note-card:hover::before { opacity: 1; }
 
 /* ─── Gradient separator ─────────────────────────────────────────── */
-.gradient-separator {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--accent-dim) 20%,
-    rgba(167,139,250,0.08) 60%,
-    transparent 100%
-  );
+.gradient-sep {
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent-str) 0%, var(--accent-dim) 40%, transparent 100%);
+  margin-bottom: 1.5rem;
 }
 
-/* ─── Star field ─────────────────────────────────────────────────── */
+/* ─── Stars ──────────────────────────────────────────────────────── */
 .star-canvas {
   opacity: var(--star-opacity);
-  transition: opacity 0.5s ease;
+  transition: opacity 0.4s ease;
 }
 
 /* ─── Page enter ─────────────────────────────────────────────────── */
 .page-enter {
-  animation: pageEnter 0.35s ease forwards;
+  animation: pageEnter 0.3s ease forwards;
 }
-
 @keyframes pageEnter {
-  from { opacity: 0; transform: translateY(5px); }
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── Glow pulse ─────────────────────────────────────────────────── */
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+@keyframes pulseGlow {
+  0%,100% { opacity: 0.3; }
+  50%      { opacity: 1; }
+}
+
+/* ─── Gradient text ──────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--violet) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* ─── KaTeX ──────────────────────────────────────────────────────── */
-.katex { font-size: 1.05em; color: var(--text-1); }
-.katex-display { margin: 1.75em 0; overflow-x: auto; }
-.katex-display > .katex { color: var(--text-1); }
-
-/* ─── Math block inner ───────────────────────────────────────────── */
-.math-block-inner {
-  position: relative;
-}
-.math-block-inner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(ellipse at 50% 110%, var(--accent-dim) 0%, transparent 65%);
-  pointer-events: none;
-}
-
-/* ─── Sketch frame ───────────────────────────────────────────────── */
-.sketch-frame { position: relative; }
-.sketch-frame::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent-dim), transparent 60%);
-  z-index: -1;
-}
+.katex { font-size: 1.05em; color: var(--text-1) !important; }
+.katex-display { margin: 1.25em 0; overflow-x: auto; }
+.katex-display .katex { color: var(--text-1) !important; }
+.katex-html { color: var(--text-1) !important; }
 
 /* ─── Prose ──────────────────────────────────────────────────────── */
 .prose-stella {
   color: var(--text-2);
   font-size: 0.9375rem;
-  line-height: 1.8;
+  line-height: 1.75;
 }
-
-.prose-stella h1,
-.prose-stella h2,
-.prose-stella h3,
-.prose-stella h4 {
+.prose-stella h1,.prose-stella h2,.prose-stella h3,.prose-stella h4 {
   font-family: var(--font-display);
   color: var(--text-1);
   letter-spacing: -0.02em;
+  font-weight: 600;
 }
-
-.prose-stella h2 { font-size: 1.3rem; margin-top: 2.5em; }
-.prose-stella h3 { font-size: 1.1rem; }
-
-.prose-stella p { margin: 1.25em 0; }
-
+.prose-stella h2 { font-size: 1.25rem; margin: 2em 0 0.75em; }
+.prose-stella h3 { font-size: 1.05rem; margin: 1.5em 0 0.5em; color: var(--text-2); }
+.prose-stella p  { margin: 0.9em 0; }
 .prose-stella strong { color: var(--text-1); font-weight: 600; }
-
+.prose-stella em { color: var(--text-2); }
 .prose-stella a { color: var(--accent); text-decoration: none; }
 .prose-stella a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 .prose-stella code {
   font-family: var(--font-mono);
-  font-size: 0.83em;
-  background: var(--prose-code-bg);
+  font-size: 0.82em;
+  background: var(--code-bg);
   color: var(--accent);
-  padding: 0.12em 0.4em;
+  padding: 0.1em 0.35em;
   border-radius: 4px;
   border: 1px solid var(--border);
 }
-
 .prose-stella pre {
-  background: var(--prose-pre-bg) !important;
+  background: var(--pre-bg) !important;
   border: 1px solid var(--border-mid);
   border-radius: 8px;
   overflow-x: auto;
-  padding: 1.25em 1.5em;
+  padding: 1rem 1.25rem;
+  margin: 1.25em 0;
 }
-
 .prose-stella pre code {
   background: transparent !important;
   border: none !important;
   padding: 0 !important;
   color: var(--text-2);
-  font-size: 0.85em;
+  font-size: 0.84em;
 }
-
 .prose-stella blockquote {
   border-left: 3px solid var(--accent);
-  padding-left: 1.25em;
+  padding-left: 1em;
   color: var(--text-3);
   font-style: italic;
+  margin: 1em 0;
 }
-
 .prose-stella hr {
   border: none;
   height: 1px;
   background: var(--border);
-  margin: 3em 0;
+  margin: 2em 0;
 }
 
 /* ─── Tables ─────────────────────────────────────────────────────── */
 .prose-stella table {
   width: 100%;
-  font-size: 0.875em;
+  font-size: 0.86em;
   border-collapse: separate;
   border-spacing: 0;
   border: 1px solid var(--border-mid);
   border-radius: 8px;
   overflow: hidden;
-  margin: 1.75em 0;
+  margin: 1.25em 0;
 }
-
 .prose-stella thead {
   background: var(--surface-2);
 }
-
 .prose-stella thead th {
-  padding: 0.75em 1em;
+  padding: 0.6em 1em;
   text-align: left;
-  font-size: 0.72em;
+  font-size: 0.7em;
   font-family: var(--font-mono);
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -350,76 +276,70 @@ body {
   color: var(--text-4);
   border-bottom: 1px solid var(--border-mid);
 }
-
 .prose-stella tbody tr {
   border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
+  transition: background 0.12s;
 }
-
 .prose-stella tbody tr:last-child { border-bottom: none; }
 .prose-stella tbody tr:hover { background: var(--accent-dim); }
-
 .prose-stella tbody td {
-  padding: 0.7em 1em;
+  padding: 0.6em 1em;
   color: var(--text-2);
   vertical-align: top;
 }
 
-/* ─── Ul / Ol ────────────────────────────────────────────────────── */
-.prose-stella ul { list-style: none; padding-left: 1.25em; }
-.prose-stella ul li { position: relative; margin: 0.4em 0; }
+/* ─── Lists ──────────────────────────────────────────────────────── */
+.prose-stella ul { list-style: none; padding-left: 1.1em; margin: 0.75em 0; }
+.prose-stella ul li { position: relative; margin: 0.3em 0; }
 .prose-stella ul li::before {
   content: "·";
   position: absolute;
   left: -1em;
   color: var(--accent);
-  font-size: 1.2em;
+  font-size: 1.3em;
   line-height: 1;
+  top: -0.05em;
 }
-.prose-stella ol { padding-left: 1.5em; }
-.prose-stella ol li { margin: 0.4em 0; color: var(--text-2); }
-.prose-stella li > code { font-size: 0.82em; }
+.prose-stella ol { padding-left: 1.4em; margin: 0.75em 0; }
+.prose-stella ol li { margin: 0.3em 0; color: var(--text-2); }
+
+/* ─── Nav hover ──────────────────────────────────────────────────── */
+.nav-link {
+  display: block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Constellation bg dots ──────────────────────────────────────── */
+.constellation-bg {
+  background-image: radial-gradient(circle, var(--accent-dim) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+/* ─── Search ─────────────────────────────────────────────────────── */
+.stella-search {
+  background: var(--surface);
+  border: 1px solid var(--accent-dim);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 24px 60px rgba(0,0,0,0.4), 0 0 60px var(--accent-dim);
+}
 
 /* ─── Stats bar ──────────────────────────────────────────────────── */
 .stella-stats {
   background: var(--surface);
   border: 1px solid var(--border);
-  transition: background 0.3s ease;
 }
 
-/* ─── Search modal ───────────────────────────────────────────────── */
-.stella-search-modal {
-  background: var(--surface);
-  border: 1px solid var(--accent-dim);
-}
-
-/* ─── Mark highlight ─────────────────────────────────────────────── */
+/* ─── Mark ───────────────────────────────────────────────────────── */
 mark {
   background: var(--accent-dim);
   color: var(--text-1);
   padding: 0.05em 0.2em;
   border-radius: 2px;
-}
-
-/* ─── Glow utilities ─────────────────────────────────────────────── */
-@layer utilities {
-  .glow-accent { box-shadow: 0 0 20px var(--accent-dim); }
-  .text-glow-accent { text-shadow: 0 0 20px var(--accent-glow); }
-  .animate-pulse-glow {
-    animation: pulseGlow 2.5s ease-in-out infinite;
-  }
-}
-
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.3; }
-  50%       { opacity: 0.9; }
-}
-
-/* ─── Constellation dots (sidebar decorative) ────────────────────── */
-.constellation-bg {
-  background-image:
-    radial-gradient(circle, rgba(122,162,255,0.06) 1px, transparent 1px);
-  background-size: 28px 28px;
 }
 
 /* ─── Responsive ─────────────────────────────────────────────────── */
