@@ -34,7 +34,7 @@
   --pre-bg:         #070918;
   --star-opacity:   1;
 
-  --font-display: "Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;
+  --font-display: "Optima","Segoe UI","Candara","Trebuchet MS",system-ui,sans-serif;
   --font-body: -apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
   --font-mono: "Cascadia Code","Fira Code",Consolas,Monaco,"Courier New",monospace;
 }
@@ -105,24 +105,29 @@ body {
   -webkit-backdrop-filter: blur(16px);
 }
 
-/* ─── Sidebar navigation items ───────────────────────────────────── */
-.sidebar-active {
-  color: var(--accent) !important;
-  background: var(--accent-dim);
-  border-left: 2px solid var(--accent);
-  box-shadow: inset 6px 0 16px var(--accent-dim);
+/* ─── Sidebar navigation items ──────────────────────────────────── */
+.sidebar-item {
+  display: block;
+  transition: color 0.15s, background 0.15s;
+}
+
+.sidebar-item--active {
+  color: var(--accent);
   font-weight: 500;
-}
-
-.sidebar-inactive {
-  color: var(--text-3);
-  border-left: 2px solid transparent;
-}
-
-.sidebar-inactive:hover {
-  color: var(--text-2);
   background: var(--accent-dim);
-  border-left-color: var(--border-mid);
+}
+
+.sidebar-item--default {
+  color: var(--text-3);
+}
+
+.sidebar-item--default:hover {
+  color: var(--text-2);
+  background: rgba(96,165,250,0.05);
+}
+
+html.light .sidebar-item--default:hover {
+  background: rgba(30,64,175,0.05);
 }
 
 /* ─── Note cards ─────────────────────────────────────────────────── */
@@ -367,7 +372,7 @@ html.light .mobile-toggle {
 }
 
 /* ─── Responsive ─────────────────────────────────────────────────── */
-.stella-topbar-offset { left: 272px; }
+.stella-topbar-offset { left: 260px; }
 
 @media (max-width: 767px) {
   .md-main { margin-left: 0 !important; }

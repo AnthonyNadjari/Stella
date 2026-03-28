@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ChevronDown, ChevronRight, LayoutGrid, Menu, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Menu, X } from "lucide-react";
 import clsx from "clsx";
 import type { NoteMetadata } from "@/lib/notes";
 
@@ -12,14 +12,11 @@ interface SidebarProps {
 }
 
 const CATEGORY_ORDER = ["Equity","Volatility","Rates","Structured Products","Stochastic Calculus","Numerical Methods","General"];
-const CATEGORY_ICONS: Record<string, string> = {
-  Equity: "◈", Volatility: "◎", Rates: "◇",
-  "Structured Products": "◉", "Stochastic Calculus": "○", "Numerical Methods": "◫", General: "·",
-};
 
 export default function Sidebar({ notesByCategory }: SidebarProps) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [catCollapsed, setCatCollapsed] = useState<Record<string, boolean>>({});
+  const [tocCollapsed, setTocCollapsed] = useState<Record<string, boolean>>({});
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const orderedCategories = [
@@ -34,110 +31,123 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
   const totalNotes = Object.values(notesByCategory).flat().length;
 
   const content = (
-    <nav className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="px-5 pt-5 pb-4" style={{ borderBottom: "1px solid var(--border)" }}>
-        <Link href="/" onClick={() => setMobileOpen(false)}>
-          <div className="flex items-center gap-3 group">
-            {/* Stella glyph */}
-            <div className="relative w-8 h-8 shrink-0">
-              <svg viewBox="0 0 32 32" fill="none" className="w-full h-full">
-                {[0,45,90,135,180,225,270,315].map((a, i) => {
-                  const r = 13;
-                  const x = 16 + r * Math.cos((a * Math.PI) / 180);
-                  const y = 16 + r * Math.sin((a * Math.PI) / 180);
-                  return <circle key={a} cx={x} cy={y} r={i % 2 === 0 ? 1 : 0.6} fill="var(--accent)" opacity={i % 2 === 0 ? 0.7 : 0.3} />;
-                })}
-                {[0,90,180,270].map((a) => {
-                  const r1 = 5, r2 = 13;
-                  return <line key={a}
-                    x1={16 + r1 * Math.cos((a * Math.PI) / 180)}
-                    y1={16 + r1 * Math.sin((a * Math.PI) / 180)}
-                    x2={16 + r2 * Math.cos((a * Math.PI) / 180)}
-                    y2={16 + r2 * Math.sin((a * Math.PI) / 180)}
-                    stroke="var(--accent)" strokeWidth="0.5" opacity="0.2"
-                  />;
-                })}
-                <circle cx="16" cy="16" r="3" fill="var(--accent)" opacity="0.9" />
-                <circle cx="16" cy="16" r="5" fill="var(--accent)" opacity="0.08" />
-              </svg>
-              <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(circle, var(--accent-dim) 0%, transparent 70%)" }} />
-            </div>
+    <nav className="flex flex-col h-full overflow-hidden">
 
-            <div>
-              <div
-                className="text-[15px] font-semibold tracking-wider transition-colors"
-                style={{ fontFamily: "var(--font-display)", color: "var(--accent)", letterSpacing: "0.12em" }}
-              >
-                STELLA
-              </div>
-              <div className="text-[9px] tracking-widest uppercase font-mono" style={{ color: "var(--text-4)" }}>
-                Knowledge System
-              </div>
+      {/* ── Logo ── */}
+      <div className="px-4 py-4 shrink-0" style={{ borderBottom: "1px solid var(--border)" }}>
+        <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-3">
+          {/* Mark: simple diamond cross */}
+          <div className="shrink-0" style={{ color: "var(--accent)", fontSize: "20px", lineHeight: 1, opacity: 0.9 }}>
+            ✦
+          </div>
+          <div>
+            <div style={{
+              fontFamily: "var(--font-mono)",
+              color: "var(--text-1)",
+              fontSize: "13px",
+              fontWeight: 700,
+              letterSpacing: "0.22em",
+            }}>
+              STELLA
+            </div>
+            <div style={{ fontFamily: "var(--font-mono)", color: "var(--text-4)", fontSize: "9px", letterSpacing: "0.16em" }}>
+              KNOWLEDGE SYSTEM
             </div>
           </div>
         </Link>
       </div>
 
-      {/* Nav */}
-      <div className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+      {/* ── Nav ── */}
+      <div className="flex-1 overflow-y-auto py-2">
+
         {/* Overview */}
         <Link
           href="/"
           onClick={() => setMobileOpen(false)}
-          className={clsx(
-            "nav-link flex items-center gap-2.5 text-sm transition-all",
-            pathname === "/" ? "sidebar-active" : "sidebar-inactive"
-          )}
+          className={clsx("sidebar-item flex items-center gap-2 mx-2 px-3 py-2 rounded text-[13px] transition-colors", pathname === "/" ? "sidebar-item--active" : "sidebar-item--default")}
         >
-          <LayoutGrid size={12} className="shrink-0 opacity-70" />
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", opacity: 0.6 }}>⊞</span>
           <span>Overview</span>
         </Link>
 
-        {/* Separator */}
-        <div className="gradient-sep !mb-1 !mt-3 mx-1" />
+        {/* Divider */}
+        <div className="mx-3 my-2" style={{ height: "1px", background: "var(--border)" }} />
 
         {/* Categories */}
         {orderedCategories.map((category) => {
           const notes = notesByCategory[category];
-          const isOpen = collapsed[category] !== true;
-          const icon = CATEGORY_ICONS[category] || "·";
+          const catOpen = catCollapsed[category] !== true;
 
           return (
-            <div key={category} className="mb-0.5">
+            <div key={category} className="mb-1">
+              {/* Category toggle */}
               <button
-                onClick={() => setCollapsed((p) => ({ ...p, [category]: !p[category] }))}
-                className="w-full flex items-center justify-between px-3 py-1.5 rounded-md transition-colors group"
-                style={{ color: "var(--text-4)" }}
+                onClick={() => setCatCollapsed((p) => ({ ...p, [category]: !p[category] }))}
+                className="w-full flex items-center justify-between px-5 py-1 hover:text-accent transition-colors"
+                style={{ color: "var(--text-4)", fontFamily: "var(--font-mono)", fontSize: "9.5px", letterSpacing: "0.14em", textTransform: "uppercase" }}
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono w-3 text-center" style={{ color: "var(--accent)", opacity: 0.6 }}>
-                    {icon}
-                  </span>
-                  <span className="text-[10px] font-semibold tracking-widest uppercase" style={{ letterSpacing: "0.1em" }}>
-                    {category}
-                  </span>
-                </div>
-                {isOpen
-                  ? <ChevronDown size={10} style={{ opacity: 0.4 }} />
-                  : <ChevronRight size={10} style={{ opacity: 0.4 }} />}
+                <span>{category}</span>
+                {catOpen
+                  ? <ChevronDown size={9} style={{ opacity: 0.5 }} />
+                  : <ChevronRight size={9} style={{ opacity: 0.5 }} />}
               </button>
 
-              {isOpen && (
-                <div className="mt-0.5 ml-3 pl-2 space-y-0.5" style={{ borderLeft: "1px solid var(--border)" }}>
-                  {notes.map((note) => (
-                    <Link
-                      key={note.path}
-                      href={`/notes/${note.path}`}
-                      onClick={() => setMobileOpen(false)}
-                      className={clsx(
-                        "nav-link block rounded-r-md text-[12.5px] leading-snug truncate transition-all",
-                        isActive(note.path) ? "sidebar-active" : "sidebar-inactive"
-                      )}
-                    >
-                      {note.title}
-                    </Link>
-                  ))}
+              {catOpen && (
+                <div className="mt-0.5">
+                  {notes.map((note) => {
+                    const active = isActive(note.path);
+                    const hasSections = note.sections.length > 0;
+                    const tocOpen = tocCollapsed[note.path] !== false; // open by default when active
+
+                    return (
+                      <div key={note.path}>
+                        {/* Note row */}
+                        <div className="flex items-center mx-2">
+                          <Link
+                            href={`/notes/${note.path}`}
+                            onClick={() => setMobileOpen(false)}
+                            className={clsx(
+                              "sidebar-item flex-1 px-3 py-1.5 rounded text-[12.5px] leading-snug truncate transition-colors",
+                              active ? "sidebar-item--active" : "sidebar-item--default"
+                            )}
+                          >
+                            {note.title}
+                          </Link>
+                          {/* TOC toggle — only show when active and has sections */}
+                          {active && hasSections && (
+                            <button
+                              onClick={() => setTocCollapsed((p) => ({ ...p, [note.path]: p[note.path] !== false ? false : true }))}
+                              className="shrink-0 p-1 rounded transition-colors"
+                              style={{ color: "var(--text-4)" }}
+                              title={tocOpen ? "Hide sections" : "Show sections"}
+                            >
+                              {tocOpen ? <ChevronDown size={9} /> : <ChevronRight size={9} />}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Sections TOC — only for active note */}
+                        {active && hasSections && tocOpen && (
+                          <div className="ml-5 mt-0.5 mb-1" style={{ borderLeft: "1px solid var(--border-mid)" }}>
+                            {note.sections.map((sec) => (
+                              <Link
+                                key={sec.id}
+                                href={`/notes/${note.path}#${sec.id}`}
+                                onClick={() => setMobileOpen(false)}
+                                className="block px-3 py-1 text-[11px] leading-snug truncate transition-colors hover:text-accent"
+                                style={{
+                                  color: "var(--text-4)",
+                                  paddingLeft: sec.level === 3 ? "1.5rem" : "0.75rem",
+                                }}
+                              >
+                                {sec.text}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -145,12 +155,12 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
         })}
       </div>
 
-      {/* Footer */}
-      <div className="px-4 py-3" style={{ borderTop: "1px solid var(--border)" }}>
+      {/* ── Footer ── */}
+      <div className="px-4 py-3 shrink-0" style={{ borderTop: "1px solid var(--border)" }}>
         <div className="flex items-center gap-1.5">
-          <div className="w-1 h-1 rounded-full animate-pulse-glow" style={{ background: "var(--accent)" }} />
-          <span className="text-[10px] font-mono" style={{ color: "var(--text-4)" }}>
-            {totalNotes} note{totalNotes !== 1 ? "s" : ""} · live
+          <div className="w-1.5 h-1.5 rounded-full animate-pulse-glow" style={{ background: "var(--accent)" }} />
+          <span style={{ fontFamily: "var(--font-mono)", color: "var(--text-4)", fontSize: "10px" }}>
+            {totalNotes} notes · live
           </span>
         </div>
       </div>
@@ -160,24 +170,24 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
   return (
     <>
       {/* Desktop */}
-      <aside className="stella-sidebar constellation-bg hidden md:flex fixed left-0 top-0 bottom-0 flex-col w-[272px] z-30">
+      <aside className="stella-sidebar hidden md:flex fixed left-0 top-0 bottom-0 flex-col w-[260px] z-30">
         {content}
       </aside>
 
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="mobile-toggle md:hidden fixed top-3.5 left-4 z-50 p-1.5 rounded-md transition-colors"
-        aria-label="Toggle menu"
+        className="mobile-toggle md:hidden fixed top-3.5 left-4 z-50 p-1.5 rounded transition-colors"
+        aria-label={mobileOpen ? "Close menu" : "Open menu"}
       >
-        {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+        {mobileOpen ? <X size={16} /> : <Menu size={16} />}
       </button>
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
           className="md:hidden fixed inset-0 z-40"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)" }}
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -185,7 +195,7 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
       {/* Mobile sidebar */}
       <aside
         className={clsx(
-          "md:hidden stella-sidebar constellation-bg fixed left-0 top-0 bottom-0 w-72 z-50 flex flex-col transition-transform duration-300",
+          "md:hidden stella-sidebar fixed left-0 top-0 bottom-0 w-[260px] z-50 flex flex-col transition-transform duration-300",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
