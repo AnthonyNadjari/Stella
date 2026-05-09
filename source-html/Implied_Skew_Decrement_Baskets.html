@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Implied Skew Reconstruction — Decrement Baskets</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0e12;
+    --surface: #13161c;
+    --surface-2: #1a1e26;
+    --border: #252a35;
+    --border-accent: #2d3340;
+    --text: #c8cdd8;
+    --text-muted: #6b7280;
+    --text-heading: #e8ecf2;
+    --accent: #7c9cff;
+    --accent-dim: #4a6abf;
+    --accent-glow: rgba(124, 156, 255, 0.08);
+    --orange: #e8a55a;
+    --orange-dim: rgba(232, 165, 90, 0.12);
+    --red: #e06070;
+    --red-dim: rgba(224, 96, 112, 0.10);
+    --green: #5ec490;
+    --green-dim: rgba(94, 196, 144, 0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.72;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 80px 32px 120px;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 64px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header .tag {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .header h1 {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 40px;
+    font-weight: 300;
+    color: var(--text-heading);
+    line-height: 1.2;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+  .header .subtitle {
+    font-size: 17px;
+    color: var(--text-muted);
+    font-style: italic;
+    max-width: 600px;
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 56px;
+  }
+  .section-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--accent-dim);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text-heading);
+    margin-bottom: 20px;
+    letter-spacing: -0.2px;
+  }
+  h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--orange);
+    margin-top: 32px;
+    margin-bottom: 12px;
+  }
+
+  p { margin-bottom: 16px; }
+
+  /* Math blocks */
+  .math-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-dim);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin: 20px 0 24px;
+    overflow-x: auto;
+    text-align: center;
+  }
+  .math-block .katex { font-size: 1.05em; }
+
+  .math-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    text-align: left;
+  }
+
+  /* Inline emphasis */
+  .key-concept {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  strong {
+    color: var(--text-heading);
+    font-weight: 500;
+  }
+
+  /* Callout boxes */
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin: 24px 0;
+  }
+  .callout.insight {
+    border-left: 3px solid var(--orange);
+    background: var(--orange-dim);
+  }
+  .callout.warning {
+    border-left: 3px solid var(--red);
+    background: var(--red-dim);
+  }
+  .callout.result {
+    border-left: 3px solid var(--green);
+    background: var(--green-dim);
+  }
+  .callout .callout-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .callout.insight .callout-title { color: var(--orange); }
+  .callout.warning .callout-title { color: var(--red); }
+  .callout.result .callout-title { color: var(--green); }
+
+  /* Step flow */
+  .step-flow {
+    position: relative;
+    padding-left: 36px;
+    margin: 24px 0;
+  }
+  .step-flow::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: var(--border-accent);
+  }
+  .step {
+    position: relative;
+    margin-bottom: 28px;
+  }
+  .step:last-child { margin-bottom: 0; }
+  .step::before {
+    content: '';
+    position: absolute;
+    left: -30px;
+    top: 10px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--accent-dim);
+  }
+  .step-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-heading);
+    margin-bottom: 8px;
+  }
+  .step p {
+    font-size: 16.5px;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  /* Table */
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+  }
+  .comparison-table th {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--border-accent);
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .comparison-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table .method-name { color: var(--text-heading); font-weight: 500; }
+
+  /* Code-style inline */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    background: var(--surface-2);
+    padding: 2px 7px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+
+  /* Dividers */
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .page { padding: 40px 20px 80px; }
+    .header h1 { font-size: 28px; }
+    .math-block { padding: 14px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="tag">Equity Derivatives — Structuring & Quant Pricing</div>
+    <h1>Implied Skew Reconstruction<br>for Custom Decrement Baskets</h1>
+    <div class="subtitle">How to build an implied vol surface for a basket with no listed options — from single-name calibrations through Monte Carlo to autocall pricing impacts.</div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION 1 -->
+  <!-- ============================================ -->
+  <div class="section">
+    <div class="section-number">01</div>
+    <h2>The Problem</h2>
+
+    <p>Consider a custom basket of \(N\) stocks with initial weights \(w_i\), subject to a fixed decrement \(d\) (typically 50 bps/year or 5% annualised). This basket is the underlying of an autocall structure.</p>
+
+    <p>No options trade on this basket — so there is <strong>no observable implied vol surface</strong>. However, listed options exist on each individual component \(S_i\), giving us full implied vol surfaces \(\sigma_i^{\text{imp}}(K, T)\).</p>
+
+    <p>The goal: <span class="key-concept">reconstruct the implied vol surface of the basket</span> from the single-name surfaces and a correlation structure, in a way that is arbitrage-free and consistent with market data.</p>
+
+    <div class="callout insight">
+      <div class="callout-title">Why not a simple vol ratio?</div>
+      <p>The naive approach — scaling a benchmark index surface by a constant ratio \(k = \sigma_{\text{basket}}^{\text{hist}} / \sigma_{\text{index}}^{\text{hist}}\) — fails because it preserves the <em>shape</em> of the benchmark skew, which has no reason to match the basket's. The skew of a custom basket depends on its specific composition, sector concentration, correlation structure, and rebalancing rules. A scalar multiple cannot capture any of this.</p>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION 2 -->
+  <!-- ============================================ -->
+  <div class="section">
+    <div class="section-number">02</div>
+    <h2>Basket Dynamics</h2>
+
+    <h3>Basket value (pre-decrement)</h3>
+    <p>The basket performance index at time \(t\), before decrement, is defined as:</p>
+    <div class="math-block">
+      <div class="math-label">Basket Level</div>
+      $$B_t = \sum_{i=1}^{N} w_i \frac{S_{i,t}}{S_{i,0}}$$
+    </div>
+
+    <p>For a proportional decrement at rate \(d\) per annum:</p>
+    <div class="math-block">
+      <div class="math-label">Decrement Index</div>
+      $$I_t = B_t \cdot e^{-d \, t}$$
+    </div>
+
+    <p>The decrement acts as a <strong>forward shift</strong> — it lowers the forward of the basket without changing its volatility directly. The adjusted forward is:</p>
+    <div class="math-block">
+      $$F_{\text{adj}}(T) = F_{\text{basket}}(T) \cdot e^{-d \, T}$$
+    </div>
+
+    <h3>Instantaneous variance of the basket</h3>
+    <p>Under a multi-asset diffusion where each stock follows its local vol dynamics, the instantaneous variance of the basket is:</p>
+    <div class="math-block">
+      <div class="math-label">Basket Variance</div>
+      $$\sigma_B^2(t) = \sum_{i=1}^{N} \sum_{j=1}^{N} \tilde{w}_i(t) \, \tilde{w}_j(t) \, \rho_{ij} \, \sigma_i^{\text{loc}}(S_i, t) \, \sigma_j^{\text{loc}}(S_j, t)$$
+    </div>
+
+    <p>where \(\tilde{w}_i(t) = w_i \, S_{i,t} / B_t\) are the <strong>effective weights</strong> at time \(t\), which drift dynamically as stocks diverge from each other.</p>
+
+    <div class="callout insight">
+      <div class="callout-title">Path dependency</div>
+      <p>The effective weights \(\tilde{w}_i(t)\) depend on the full path of each stock up to \(t\), not just on terminal levels. If the basket rebalances periodically to fixed weights, the weight dynamics reset at each rebalancing date. In both cases (fixed or rebalanced), the basket variance is path-dependent, which rules out closed-form solutions and forces a Monte Carlo approach.</p>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION 3 -->
+  <!-- ============================================ -->
+  <div class="section">
+    <div class="section-number">03</div>
+    <h2>The Reconstruction Pipeline</h2>
+
+    <div class="step-flow">
+      <div class="step">
+        <div class="step-title">Calibrate local vol (or SLV) on each component</div>
+        <p>For each stock \(i\), invert its listed implied surface to obtain \(\sigma_i^{\text{loc}}(S, t)\) via Dupire. For better forward-skew dynamics (critical for autocalls with distant barriers), calibrate a stochastic-local vol model (e.g. Heston + local vol lever function).</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Specify the correlation structure</div>
+        <p>Build \(\rho_{ij}\) either from historical realised correlations or — better — by extracting <strong>implied correlation</strong> from a benchmark index. If the benchmark index has vol \(\sigma_{\text{idx}}^{\text{imp}}\), known weights \(\omega_i\), and the component vols are known, invert:</p>
+        <div class="math-block">
+          $$\left(\sigma_{\text{idx}}^{\text{imp}}\right)^2 = \sum_{i,j} \omega_i \, \omega_j \, \hat{\rho}_{ij} \, \sigma_i^{\text{imp}} \, \sigma_j^{\text{imp}}$$
+        </div>
+        <p>for a flat implied correlation \(\hat{\rho}\), or fit a parametric structure. Extract a term structure by doing this per maturity.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Multi-asset Monte Carlo simulation</div>
+        <p>Generate \(M\) paths (typically 200k–500k for smooth skew) for all \(N\) stocks simultaneously. At each time step:</p>
+        <p>— Draw correlated Gaussians via Cholesky decomposition of \(\rho\).</p>
+        <p>— Evolve each \(S_i\) under its own local vol \(\sigma_i^{\text{loc}}(S_i, t)\).</p>
+        <p>— Compute \(B_t\) and apply the decrement to get \(I_t\).</p>
+        <p>— If the basket rebalances, reset weights at rebalancing dates.</p>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Price vanillas on the basket and invert</div>
+        <p>From the simulated distribution of \(I_T\), compute call and put prices on the basket for a grid of strikes \(K\) and maturities \(T\):</p>
+        <div class="math-block">
+          $$C(K, T) = e^{-rT} \, \mathbb{E}\!\left[\left(I_T - K\right)^+\right] \approx \frac{e^{-rT}}{M} \sum_{m=1}^{M} \left(I_T^{(m)} - K\right)^+$$
+        </div>
+        <p>Then invert Black-Scholes for each \((K, T)\) to recover:</p>
+        <div class="math-block">
+          $$\sigma_{\text{basket}}^{\text{imp}}(K, T) = \text{BS}^{-1}\!\left(C(K, T),\; F_{\text{adj}}(T),\; K,\; T\right)$$
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-title">Smooth and parametrise</div>
+        <p>Fit the raw implied vol points with a parametric model — SVI (Gatheral) or SABR — to obtain a smooth, arbitrage-free, interpolable surface. This is what gets passed to the autocall pricer.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION 4 -->
+  <!-- ============================================ -->
+  <div class="section">
+    <div class="section-number">04</div>
+    <h2>Where the Skew Comes From</h2>
+
+    <p>The reconstructed skew of the basket is not assumed — it <strong>emerges mechanically</strong> from the simulation. It has three distinct drivers:</p>
+
+    <h3>Single-name skew propagation</h3>
+    <p>Each stock's local vol surface encodes its own skew: \(\sigma_i^{\text{loc}}(S, t)\) is an increasing function of moneyness on the downside. In crash scenarios, all stocks move into regions of higher local vol, which inflates the basket variance. This propagates individual skew into the basket.</p>
+
+    <h3>Correlation regime shift</h3>
+    <p>In practice, correlations rise in down markets (the "correlation smile"). Even with a fixed \(\rho_{ij}\) matrix, the effective correlation of the basket increases in down scenarios because individual skews push all vols higher simultaneously. If using stochastic or regime-dependent correlation, this effect is amplified further. This fattens the left tail of the basket distribution.</p>
+
+    <h3>Weight concentration (dispersion effect)</h3>
+    <p>In a fixed basket (no rebal), a stock that drops 40% sees its effective weight \(\tilde{w}_i\) shrink, naturally de-risking the basket. But in a rebalanced basket, the weights are reset — you <strong>re-concentrate exposure</strong> on the loser, which now has the highest vol. This creates a pro-cyclical vol injection mechanism. Quantitatively, the post-rebal basket variance is higher than the pre-rebal variance because:</p>
+
+    <div class="math-block">
+      $$\sigma_{B,\text{post-rebal}}^2 = \sum_{i,j} w_i \, w_j \, \rho_{ij} \, \sigma_i^{\text{loc}} \, \sigma_j^{\text{loc}} \;\;>\;\; \sum_{i,j} \tilde{w}_i \, \tilde{w}_j \, \rho_{ij} \, \sigma_i^{\text{loc}} \, \sigma_j^{\text{loc}} = \sigma_{B,\text{pre-rebal}}^2$$
+    </div>
+
+    <p>because reverting to equal weights (or initial weights) from post-crash drifted weights increases the contribution of high-vol stocks.</p>
+
+    <div class="callout result">
+      <div class="callout-title">Net effect</div>
+      <p>The combination of these three channels — single-name skew, correlation regime, weight concentration — produces a basket implied vol surface with a <strong>steeper skew</strong> and <strong>heavier left tail</strong> than any individual component, and steeper still for rebalanced baskets vs. fixed baskets.</p>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION 5 -->
+  <!-- ============================================ -->
+  <div class="section">
+    <div class="section-number">05</div>
+    <h2>Impact on Autocall Pricing</h2>
+
+    <p>An autocall investor is <strong>long coupons + early redemption</strong> and <strong>short a down-and-in put</strong> (KI barrier, typically 50–60% of initial). This makes the investor structurally short vol and short skew.</p>
+
+    <h3>Vega exposure</h3>
+    <p>The Vega of the autocall is net negative, dominated by the short put embedded in the KI. Higher basket vol → higher KI put value → <strong>lower autocall price</strong> to the investor. The rebalanced basket, being structurally more volatile, therefore commands a <strong>higher coupon</strong> (compensation for taking more risk) than the same structure on a fixed basket.</p>
+
+    <h3>Skew exposure</h3>
+    <p>The autocall's short KI put is deep OTM — its price is directly driven by the left tail of the basket distribution. A steeper skew means higher implied vol at the KI strike, which increases the embedded put value disproportionately. The pricing difference between a correctly reconstructed skew and a flat vol-ratio proxy can be <strong>significant</strong> — on the order of 50–150 bps of coupon for a typical 3Y–5Y autocall, depending on basket composition and barrier level.</p>
+
+    <h3>Decrement amplification</h3>
+    <p>The decrement lowers the forward of the basket, which has two effects:</p>
+    <p>— The ATM vol reference shifts (the "moneyness" of the KI barrier changes relative to the forward).</p>
+    <p>— The basket starts "closer" to the KI barrier in forward space, making the put more in-the-money in forward terms and increasing the sensitivity to the downside vol.</p>
+
+    <div class="math-block">
+      <div class="math-label">Forward-Adjusted Barrier Moneyness</div>
+      $$m_{\text{KI}} = \frac{K_{\text{KI}}}{F_{\text{adj}}(T)} = \frac{K_{\text{KI}}}{F_{\text{basket}}(T) \cdot e^{-dT}}$$
+    </div>
+
+    <p>As \(d\) increases, the effective moneyness of the KI barrier increases, making the embedded put more expensive and pushing the coupon higher.</p>
+
+    <div class="callout warning">
+      <div class="callout-title">Mispricing risk</div>
+      <p>Using a vol ratio proxy instead of a properly reconstructed skew systematically <strong>underestimates the left tail</strong> of the basket, which underprices the KI put and therefore overstates the autocall's value to the investor. For the issuing bank, this means taking on unhedged tail risk. The magnitude depends on how different the basket's true skew is from the proxy index's — which is precisely the information that the reconstruction pipeline provides.</p>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- SECTION 6 -->
+  <!-- ============================================ -->
+  <div class="section">
+    <div class="section-number">06</div>
+    <h2>Practical Considerations</h2>
+
+    <h3>Computational cost</h3>
+    <p>Multi-asset MC with local vol on 20–50 underlyings requires 200k–500k paths for a smooth skew surface. This is GPU-amenable (embarrassingly parallel). Variance reduction via antithetic variates and control variates (using the benchmark index as control) can reduce the path count by 3–5x for the same accuracy.</p>
+
+    <h3>Correlation calibration</h3>
+    <p>The correlation matrix is the least observable and most sensitive input. Best practice is to calibrate on index dispersion trades (long index vol / short single-stock vol) or on correlation swap levels when available. The key sensitivity to test is the <strong>correlation skew</strong> — how much correlation increases in down scenarios — since this is the primary driver of the basket's left tail.</p>
+
+    <h3>Rebalancing frequency</h3>
+    <p>Discrete rebalancing (monthly, quarterly) must be modelled explicitly in the simulation. More frequent rebalancing → more vol injection → steeper skew. The rebalancing schedule is contractually fixed in the index rules, so it's not a modelling choice but a constraint to respect.</p>
+
+    <h3>Stability</h3>
+    <p>The reconstructed surface should be checked for calendar spread and butterfly arbitrage. The SVI/SABR fit enforces no-arbitrage constraints. Day-to-day stability of the surface depends on the stability of the single-name inputs and the correlation matrix — bumping each by 1 standard deviation and re-running the pipeline gives a practical measure of model risk.</p>
+  </div>
+
+  <hr>
+
+  <!-- ============================================ -->
+  <!-- SECTION 7 -->
+  <!-- ============================================ -->
+  <div class="section">
+    <div class="section-number">07</div>
+    <h2>Methods Comparison</h2>
+
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Inputs</th>
+          <th>Skew?</th>
+          <th>Arb-Free?</th>
+          <th>Use Case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="method-name">Vol ratio</td>
+          <td>Historical vols, benchmark surface</td>
+          <td>Borrowed from proxy</td>
+          <td>No guarantee</td>
+          <td>Quick & dirty indicative</td>
+        </tr>
+        <tr>
+          <td class="method-name">Beta-adjusted skew</td>
+          <td>β vs proxy, ATM basket vol</td>
+          <td>Scaled from proxy</td>
+          <td>Approximate</td>
+          <td>Fast desk pricing</td>
+        </tr>
+        <tr>
+          <td class="method-name">Analytical moment matching</td>
+          <td>Single-name vols, ρ matrix</td>
+          <td>ATM + partial skew</td>
+          <td>Approximate</td>
+          <td>Sanity checks, risk limits</td>
+        </tr>
+        <tr>
+          <td class="method-name">MC local vol / SLV</td>
+          <td>Full single-name surfaces, ρ matrix</td>
+          <td>Fully emergent</td>
+          <td>Yes (if fitted)</td>
+          <td>Final pricing, large notionals</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: "$$", right: "$$", display: true },
+        { left: "\\(", right: "\\)", display: false }
+      ],
+      throwOnError: false
+    });
+  });
+</script>
+</body>
+</html>

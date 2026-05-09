@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autocall Hedging — LSV vs LV</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+  [data-theme="dark"] {
+    --bg: #0c0c12; --surface: #161620; --surface2: #1e1e2c; --border: #2a2a3a;
+    --accent: #FF9500; --accent-bg: rgba(255,149,0,0.06);
+    --text: #c8c8d8; --text-dim: #6e6e85;
+    --text-bright: #f0f0f8; --red: #ff4d6a; --red-bg: rgba(255,77,106,0.06);
+    --green: #34d399; --blue: #60a5fa;
+    --svg-text: #9090a5; --svg-axis: #3a3a4a;
+  }
+  [data-theme="light"] {
+    --bg: #f2f1ed; --surface: #ffffff; --surface2: #f0efe8; --border: #d0d0cc;
+    --accent: #d47800; --accent-bg: rgba(212,120,0,0.05);
+    --text: #2a2a30; --text-dim: #7a7a88;
+    --text-bright: #0a0a10; --red: #c82040; --red-bg: rgba(200,32,64,0.05);
+    --green: #1a7a50; --blue: #2860b0;
+    --svg-text: #6a6a78; --svg-axis: #b0b0b0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; line-height: 1.65;
+    transition: background 0.25s, color 0.25s;
+  }
+
+  .container { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+
+  header { border-bottom: 1px solid var(--border); padding: 28px 0 20px; margin-bottom: 32px; }
+  .header-row { display: flex; justify-content: space-between; align-items: flex-start; }
+  .tag { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent); padding: 2px 8px; margin-bottom: 10px; display: inline-block; }
+  h1 { font-family: 'Source Serif 4', serif; font-size: 28px; font-weight: 700; color: var(--text-bright); line-height: 1.2; margin-bottom: 4px; }
+  .hl { color: var(--accent); }
+  .subtitle { color: var(--text-dim); font-size: 11px; }
+  .theme-toggle { background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim); font-family: inherit; font-size: 10px; padding: 4px 10px; cursor: pointer; }
+  .theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+
+  .section { margin-bottom: 36px; }
+  .section-number { font-size: 10px; color: var(--accent); letter-spacing: 1.5px; margin-bottom: 3px; font-weight: 700; }
+  h2 { font-family: 'Source Serif 4', serif; font-size: 19px; font-weight: 600; color: var(--text-bright); margin-bottom: 10px; padding-bottom: 7px; border-bottom: 1px solid var(--border); }
+  p { margin-bottom: 8px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); padding: 14px 18px; margin: 10px 0; }
+  .card.note { border-left: 3px solid var(--accent); background: var(--accent-bg); }
+  .card.warn { border-left: 3px solid var(--red); background: var(--red-bg); }
+  .card-label { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; font-weight: 700; }
+  .card.note .card-label { color: var(--accent); }
+  .card.warn .card-label { color: var(--red); }
+
+  .imp { color: var(--accent); font-weight: 600; }
+
+  .row { display: flex; gap: 14px; margin: 10px 0; align-items: stretch; }
+  .row > * { flex: 1; min-width: 0; }
+
+  .sketch {
+    background: var(--bg); border: 1px solid var(--border);
+    padding: 14px 10px 10px; margin: 10px 0;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .sketch-title { font-size: 9px; letter-spacing: 0.6px; color: var(--text-dim); margin-bottom: 8px; font-weight: 500; text-align: center; }
+  .sketch svg { width: 100%; height: auto; display: block; }
+
+  .chain {
+    background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    padding: 12px 16px; margin: 10px 0; font-size: 13px; line-height: 2;
+  }
+  .chain .arr { color: var(--accent); font-weight: 700; }
+
+  .katex { font-size: 1em !important; }
+  .eq-block { text-align: center; padding: 8px 0; }
+  .eq-block .katex { font-size: 1.15em !important; }
+
+  footer { border-top: 1px solid var(--border); padding: 20px 0; margin-top: 40px; text-align: center; color: var(--text-dim); font-size: 10px; letter-spacing: 1px; }
+
+  @media (max-width: 720px) { .row { flex-direction: column; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-row">
+      <div>
+        <div class="tag">Derivatives — Desk Notes</div>
+        <h1>Autocall Hedging: <span class="hl">LSV vs LV</span></h1>
+        <p class="subtitle">Long spot skew · Short forward skew · Hedge P&L dynamics</p>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()">◑ theme</button>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ===== SECTION 1 ===== -->
+  <div class="section">
+    <div class="section-number">01</div>
+    <h2>Skew and <span class="hl">Forward Skew</span> under LV and LSV</h2>
+
+    <p>
+      Under \(\text{LV}\), forward skew flattens significantly. Under \(\text{LSV}\),
+      forward skew is <span class="imp">steeper</span> than LV — but still flattens with tenor.
+    </p>
+
+    <div class="row">
+      <div class="sketch" style="margin:0;">
+        <div class="sketch-title">LSV vs LV forward skew</div>
+        <svg viewBox="0 0 260 155">
+          <line x1="30" y1="12" x2="30" y2="118" stroke="var(--svg-axis)" stroke-width="1"/>
+          <line x1="30" y1="118" x2="248" y2="118" stroke="var(--svg-axis)" stroke-width="1"/>
+          <text x="8" y="68" fill="var(--svg-text)" font-size="11" font-family="Source Serif 4" font-style="italic">σ</text>
+          <text x="235" y="132" fill="var(--svg-text)" font-size="11" font-family="Source Serif 4" font-style="italic">K</text>
+          <line x1="30" y1="45" x2="248" y2="45" stroke="var(--svg-axis)" opacity="0.3" stroke-width="0.5"/>
+          <line x1="30" y1="80" x2="248" y2="80" stroke="var(--svg-axis)" opacity="0.3" stroke-width="0.5"/>
+          <path d="M38,66 Q110,72 165,80 T243,86" fill="none" stroke="var(--blue)" stroke-width="2.3"/>
+          <path d="M38,25 Q110,40 165,68 T243,94" fill="none" stroke="var(--green)" stroke-width="2.3"/>
+          <rect x="38" y="140" width="14" height="2.5" fill="var(--blue)"/>
+          <text x="56" y="144" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">fwd LV</text>
+          <rect x="138" y="140" width="14" height="2.5" fill="var(--green)"/>
+          <text x="156" y="144" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">fwd LSV</text>
+        </svg>
+      </div>
+      <div class="sketch" style="margin:0;">
+        <div class="sketch-title">Forward skew in LSV (term structure)</div>
+        <svg viewBox="0 0 260 155">
+          <line x1="30" y1="12" x2="30" y2="118" stroke="var(--svg-axis)" stroke-width="1"/>
+          <line x1="30" y1="118" x2="248" y2="118" stroke="var(--svg-axis)" stroke-width="1"/>
+          <text x="8" y="68" fill="var(--svg-text)" font-size="11" font-family="Source Serif 4" font-style="italic">σ</text>
+          <text x="235" y="132" fill="var(--svg-text)" font-size="11" font-family="Source Serif 4" font-style="italic">K</text>
+          <line x1="30" y1="45" x2="248" y2="45" stroke="var(--svg-axis)" opacity="0.3" stroke-width="0.5"/>
+          <line x1="30" y1="80" x2="248" y2="80" stroke="var(--svg-axis)" opacity="0.3" stroke-width="0.5"/>
+          <path d="M38,22 Q110,38 165,66 T243,94" fill="none" stroke="var(--accent)" stroke-width="2.3"/>
+          <path d="M38,36 Q110,50 165,72 T243,90" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="5,3" opacity="0.5"/>
+          <rect x="38" y="140" width="14" height="2.5" fill="var(--accent)"/>
+          <text x="56" y="144" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">3m1y</text>
+          <line x1="138" y1="141" x2="152" y2="141" stroke="var(--accent)" stroke-width="1.8" stroke-dasharray="4,2" opacity="0.5"/>
+          <text x="156" y="144" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">6m1y</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card note">
+      <div class="card-label">Explanation</div>
+      Under LSV, forward skew is steeper than LV.
+      But even under LSV, it still flattens with tenor:
+      \(6\text{m}1\text{y}\) is flatter than \(3\text{m}1\text{y}\).
+    </div>
+  </div>
+
+  <!-- ===== SECTION 2 ===== -->
+  <div class="section">
+    <div class="section-number">02</div>
+    <h2>Why Is an Autocall <span class="hl">Short Skew</span> but <span class="hl">Long Forward Skew</span>? <span style="font-size:14px; color:var(--text-dim); font-weight:400;">(from Trading)</span></h2>
+
+    <p>
+      <span class="imp">Setup:</span> effective life \(= 1Y\), maturity \(T = 3Y\).
+      At \(t = 1M\), the trader is already exposed to instantaneous forward skew.
+      The forward skew \(3M \to 1Y\) is steeper under LSV — forward-starting vanillas in the hedge cost more.
+    </p>
+
+    <div class="row">
+      <div class="sketch" style="margin:0; flex:1.3;">
+        <div class="sketch-title">Vega & Vanna — Trading View</div>
+        <svg viewBox="0 0 360 190">
+          <line x1="40" y1="8" x2="40" y2="145" stroke="var(--svg-axis)" stroke-width="1"/>
+          <line x1="40" y1="84" x2="340" y2="84" stroke="var(--svg-text)" opacity="0.5" stroke-width="1"/>
+          <text x="25" y="87" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">0</text>
+          <line x1="40" y1="145" x2="340" y2="145" stroke="var(--svg-text)" opacity="0.5" stroke-width="1"/>
+          <text x="325" y="158" fill="var(--svg-text)" font-size="10" font-family="Source Serif 4" font-style="italic">S</text>
+          <line x1="40" y1="42" x2="340" y2="42" stroke="var(--svg-axis)" opacity="0.3" stroke-width="0.5"/>
+          <line x1="40" y1="125" x2="340" y2="125" stroke="var(--svg-axis)" opacity="0.3" stroke-width="0.5"/>
+          <line x1="118" y1="8" x2="118" y2="145" stroke="var(--svg-text)" opacity="0.3" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="100" y="158" fill="var(--svg-text)" font-size="8" font-family="JetBrains Mono">barrier</text>
+          <line x1="245" y1="8" x2="245" y2="145" stroke="var(--svg-text)" opacity="0.3" stroke-width="1" stroke-dasharray="3,3"/>
+          <text x="225" y="158" fill="var(--svg-text)" font-size="8" font-family="JetBrains Mono">autocall</text>
+          <path d="M55,84 Q80,82 100,58 Q125,18 170,26 Q205,40 238,76 Q268,92 310,96 Q335,98 340,98"
+                fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+          <path d="M55,80 Q75,66 95,46 Q112,26 125,84 Q140,130 168,124 Q205,106 238,88 Q268,82 310,84 Q335,84 340,84"
+                fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-dasharray="5,3"/>
+          <rect x="60" y="176" width="14" height="2.5" fill="var(--accent)"/>
+          <text x="78" y="180" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">Vega</text>
+          <line x1="155" y1="177" x2="169" y2="177" stroke="var(--blue)" stroke-width="1.8" stroke-dasharray="4,2"/>
+          <text x="174" y="180" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">Vanna = dV/dS</text>
+        </svg>
+      </div>
+
+      <div style="flex:0.9; display:flex; flex-direction:column; gap:10px;">
+        <div class="card" style="margin:0; flex:1;">
+          <div class="card-label" style="color:var(--text-dim);">Vega, Vanna & Re-hedging (trading)</div>
+          <span class="imp">Vanna &lt; 0</span> right of vega peak: when \(S \downarrow\),
+          vega \(\uparrow\) — trading gets longer vol on the way down.
+          Must re-hedge by buying vol at higher levels.
+          Under LSV this costs more (steeper forward skew).
+          Exposure concentrated around the <span class="imp">barrier</span>.
+        </div>
+
+        <div class="card warn" style="margin:0;">
+          <div class="card-label">⚠ Coupon effect — partial offset</div>
+          KI barrier → <span class="imp">short forward skew</span> (trading)<br>
+          Snowball coupons → <span class="imp">long forward skew</span> (opposite sensitivity) (trading)
+          <br><br>
+          Large coupons partially compensate → net LSV/LV gap shrinks.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SECTION 3 ===== -->
+  <div class="section">
+    <div class="section-number">03</div>
+    <h2>Another Explanation: <span class="hl">Bergomi's SSR</span></h2>
+
+    <div class="row">
+      <div class="card" style="margin:0;">
+        <div class="card-label" style="color:var(--text-dim);">SSR Definition</div>
+        <div class="eq-block">
+          $$\text{SSR}_\tau = \frac{1}{skew} \cdot \frac{d\sigma_F}{d\ln S_t}$$
+        </div>
+        <p style="font-size:12px;">
+          \(skew\): slope of vol surface at forward level<br>
+          \(d\sigma_F\): change of ATM forward vol<br>
+          \(d\ln S_t\): log return of spot
+        </p>
+        <p style="font-size:12px;">
+          SSR = how implied vol moves with spot, <em>in units of skew</em>.
+          \(\text{SSR} = 2\): 1% spot move shifts ATM vol by \(2 \times skew\).
+        </p>
+        <p style="font-size:11px; color: var(--text-dim); margin-bottom:0;">
+          Regression: \(\;\Delta\sigma_{\text{ATM}} = m \cdot (\text{log ret} \times skew) + b\)
+        </p>
+      </div>
+
+      <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+        <div class="card warn" style="margin:0;">
+          <div class="card-label">⚠ LV overprices SSR</div>
+          Under LV: \(\text{SSR} \to 2\) as \(T \to 0\),
+          \(\text{SSR} \to 3\) as \(T \to \infty\).
+          So \(\text{SSR}_{\text{LV}} \in [2, 3]\) — systematically too high vs realized.
+        </div>
+
+        <div class="chain" style="margin:0;">
+          <span class="arr">▸</span> \(\text{SSR} \uparrow\) <span class="arr">⟹</span> fwd skew <span class="imp">flattens</span>
+          <span class="arr">⟹</span> autocall <span class="imp">cheaper</span><br>
+          <span class="arr">▸</span> \(\text{SSR} \downarrow\) <span class="arr">⟹</span> fwd skew <span class="imp">steepens</span>
+          <span class="arr">⟹</span> autocall <span class="imp">more expensive</span>
+        </div>
+
+        <p style="font-size:12px; margin:0;">
+          Under LSV, \(\rho\) controls spot-vol.
+          \(\rho\) lower → more SV → vol rises more when \(S \downarrow\)
+          → steeper fwd skew → autocall more expensive.
+        </p>
+      </div>
+    </div>
+
+    <div class="sketch" style="margin-top:14px;">
+      <div class="sketch-title">SX5E 3m Realized SSR — Rolling 20-Day Windows</div>
+      <svg viewBox="0 0 500 175">
+        <line x1="48" y1="8" x2="48" y2="142" stroke="var(--svg-axis)" stroke-width="1"/>
+        <line x1="48" y1="142" x2="480" y2="142" stroke="var(--svg-axis)" stroke-width="1"/>
+        <text x="16" y="142" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">0.50</text>
+        <text x="16" y="110" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">1.00</text>
+        <text x="16" y="78" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">1.50</text>
+        <text x="16" y="46" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">2.00</text>
+        <text x="16" y="16" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">2.50</text>
+        <line x1="48" y1="110" x2="480" y2="110" stroke="var(--svg-axis)" opacity="0.3" stroke-width="0.5"/>
+        <line x1="48" y1="78" x2="480" y2="78" stroke="var(--svg-axis)" opacity="0.3" stroke-width="0.5"/>
+        <line x1="48" y1="46" x2="480" y2="46" stroke="var(--svg-axis)" opacity="0.3" stroke-width="0.5"/>
+        <rect x="48" y="8" width="432" height="38" fill="var(--red)" opacity="0.07"/>
+        <line x1="48" y1="46" x2="480" y2="46" stroke="var(--red)" opacity="0.4" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="420" y="40" fill="var(--red)" opacity="0.7" font-size="9" font-family="JetBrains Mono">LV [2,3]</text>
+        <text x="55" y="157" fill="var(--svg-text)" font-size="8" font-family="JetBrains Mono">2023-01</text>
+        <text x="130" y="157" fill="var(--svg-text)" font-size="8" font-family="JetBrains Mono">2023-10</text>
+        <text x="210" y="157" fill="var(--svg-text)" font-size="8" font-family="JetBrains Mono">2024-01</text>
+        <text x="290" y="157" fill="var(--svg-text)" font-size="8" font-family="JetBrains Mono">2024-07</text>
+        <text x="370" y="157" fill="var(--svg-text)" font-size="8" font-family="JetBrains Mono">2025-01</text>
+        <text x="440" y="157" fill="var(--svg-text)" font-size="8" font-family="JetBrains Mono">2025-07</text>
+        <path d="M58,78 L66,72 L74,60 L82,46 L90,42 L98,46 L108,56 L116,60
+                 L124,52 L132,58 L140,68 L148,74 L156,70 L164,78
+                 L172,88 L180,94 L188,90 L196,84 L204,80 L212,72
+                 L220,66 L228,72 L236,82 L244,90 L252,96 L260,92
+                 L268,84 L276,78 L284,82 L292,90 L300,96 L308,104
+                 L316,98 L324,92 L332,86 L340,90 L348,96 L356,92 L364,86
+                 L372,80 L380,88 L388,96 L396,102 L404,98 L412,92
+                 L420,88 L428,96 L436,102 L444,98 L452,92 L460,96
+                 L468,106 L474,100"
+              fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linejoin="round"/>
+        <rect x="58" y="168" width="14" height="2.5" fill="var(--blue)"/>
+        <text x="76" y="172" fill="var(--svg-text)" font-size="8" font-family="JetBrains Mono">realized SSR</text>
+        <rect x="200" y="167" width="14" height="4" fill="var(--red)" opacity="0.15"/>
+        <text x="218" y="172" fill="var(--svg-text)" font-size="8" font-family="JetBrains Mono">LV SSR band</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ===== SECTION 4 ===== -->
+  <div class="section">
+    <div class="section-number">04</div>
+    <h2><span class="hl">LSV Calibration</span></h2>
+
+    <p>
+      The term structure of \(|\rho(S, \sigma)|\) is <span class="imp">concave increasing</span>.
+      We observe it at discrete tenors and compute a weighted average to calibrate \(\bar\rho\).
+    </p>
+
+    <div class="row">
+      <div class="sketch" style="margin:0; flex:1.3;">
+        <div class="sketch-title">Term structure of |ρ(S, σ)| — weighted average</div>
+        <svg viewBox="0 0 380 200">
+          <!-- Axes -->
+          <line x1="48" y1="14" x2="48" y2="148" stroke="var(--svg-axis)" stroke-width="1"/>
+          <line x1="48" y1="148" x2="365" y2="148" stroke="var(--svg-axis)" stroke-width="1"/>
+          <!-- Y label -->
+          <text x="6" y="84" fill="var(--svg-text)" font-size="10" font-family="JetBrains Mono">|ρ|</text>
+          <!-- X label -->
+          <text x="348" y="163" fill="var(--svg-text)" font-size="10" font-family="Source Serif 4" font-style="italic">T</text>
+          <!-- Grid -->
+          <line x1="48" y1="50" x2="365" y2="50" stroke="var(--svg-axis)" opacity="0.3" stroke-width="0.5"/>
+          <line x1="48" y1="100" x2="365" y2="100" stroke="var(--svg-axis)" opacity="0.3" stroke-width="0.5"/>
+
+          <!-- X tick lines -->
+          <line x1="72" y1="148" x2="72" y2="152" stroke="var(--svg-axis)" stroke-width="1"/>
+          <line x1="128" y1="148" x2="128" y2="152" stroke="var(--svg-axis)" stroke-width="1"/>
+          <line x1="190" y1="148" x2="190" y2="152" stroke="var(--svg-axis)" stroke-width="1"/>
+          <line x1="252" y1="148" x2="252" y2="152" stroke="var(--svg-axis)" stroke-width="1"/>
+          <line x1="314" y1="148" x2="314" y2="152" stroke="var(--svg-axis)" stroke-width="1"/>
+          <line x1="352" y1="148" x2="352" y2="152" stroke="var(--svg-axis)" stroke-width="1"/>
+          <!-- X tick labels -->
+          <text x="64" y="164" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">1M</text>
+          <text x="120" y="164" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">3M</text>
+          <text x="182" y="164" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">6M</text>
+          <text x="246" y="164" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">1Y</text>
+          <text x="306" y="164" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">2Y</text>
+          <text x="344" y="164" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">3Y</text>
+
+          <!-- Realized curve (concave increasing) -->
+          <path d="M72,135 Q128,72 190,50 Q270,34 352,30" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+
+          <!-- Points ON the curve, aligned with ticks -->
+          <circle cx="72" cy="135" r="5.5" fill="var(--accent)"/>
+          <circle cx="128" cy="82" r="5.5" fill="var(--accent)"/>
+          <circle cx="190" cy="52" r="5.5" fill="var(--accent)"/>
+          <circle cx="252" cy="40" r="5.5" fill="var(--accent)"/>
+          <circle cx="314" cy="34" r="5.5" fill="var(--accent)"/>
+          <circle cx="352" cy="31" r="5.5" fill="var(--accent)"/>
+
+          <!-- Weighted average horizontal: avg of y ~ (135+82+52+40+34+31)/6 ≈ 62 -->
+          <line x1="72" y1="62" x2="352" y2="62" stroke="var(--green)" stroke-width="2.2" stroke-dasharray="6,3"/>
+
+          <!-- Weight labels — placed BELOW the points, larger, bright -->
+          <text x="62" y="148" fill="var(--text-bright)" font-size="10" font-family="Source Serif 4" font-style="italic">w₁</text>
+          <text x="118" y="98" fill="var(--text-bright)" font-size="10" font-family="Source Serif 4" font-style="italic">w₂</text>
+          <text x="180" y="68" fill="var(--text-bright)" font-size="10" font-family="Source Serif 4" font-style="italic">w₃</text>
+          <text x="242" y="56" fill="var(--text-bright)" font-size="10" font-family="Source Serif 4" font-style="italic">w₄</text>
+          <text x="304" y="50" fill="var(--text-bright)" font-size="10" font-family="Source Serif 4" font-style="italic">w₅</text>
+          <text x="342" y="47" fill="var(--text-bright)" font-size="10" font-family="Source Serif 4" font-style="italic">w₆</text>
+
+          <!-- Legend -->
+          <rect x="55" y="186" width="14" height="3" fill="var(--accent)"/>
+          <text x="74" y="190" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">realized</text>
+          <circle cx="145" cy="188" r="4" fill="var(--accent)"/>
+          <text x="154" y="190" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">observed</text>
+          <line x1="228" y1="188" x2="244" y2="188" stroke="var(--green)" stroke-width="2.2" stroke-dasharray="5,2"/>
+          <text x="250" y="190" fill="var(--svg-text)" font-size="9" font-family="JetBrains Mono">ρ̄ (wtd avg)</text>
+        </svg>
+      </div>
+
+      <div style="flex:0.8; display:flex; flex-direction:column; gap:10px;">
+        <div class="card" style="margin:0;">
+          <div class="card-label" style="color:var(--text-dim);">Weighted Average</div>
+          <div class="eq-block">
+            $$\bar{\rho} = \sum_i w_i \cdot \rho_i$$
+          </div>
+          Weights \(w_i\) = autocall's vega exposure at each tenor bucket.
+        </div>
+
+        <div class="card warn" style="margin:0; flex:1;">
+          <div class="card-label">⚠ Limitation</div>
+          A single \(\bar{\rho}\) does not capture the <span class="imp">term structure of vol-of-vol</span>.
+          Realized \(\rho\) varies across tenors (concave curve) —
+          flat \(\bar{\rho}\) overestimates at short dates, underestimates at long dates →
+          mispricing at both ends.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="container">AUTOCALL LSV NOTES — DESK REFERENCE</div>
+</footer>
+
+<script>
+function toggleTheme() {
+  const h = document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+document.addEventListener("DOMContentLoaded", function() {
+  renderMathInElement(document.body, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "\\(", right: "\\)", display: false}
+    ]
+  });
+});
+</script>
+
+</body>
+</html>
