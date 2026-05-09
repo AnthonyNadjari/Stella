@@ -1,9 +1,9 @@
 ---
-title: Basket Skew Reconstruction
+title: Implied Skew on Decrement Baskets
 category: Equity
-description: How to reconstruct the implied skew of a basket from single-stock volatilities, correlations, and higher-order effects.
-tags: [skew, basket, correlation, volatility, dispersion]
-date: 2025-02-10
+description: Implied skew for worst-of and decrement-style basket structures — how barrier conditionals, order statistics, and correlation reshape the basket smile versus single names.
+tags: [basket, decrement, worst-of, implied-skew, correlation, structured-products]
+date: 2026-05-09
 ---
 
 import Section from "@/components/Section";
@@ -11,119 +11,102 @@ import Callout from "@/components/Callout";
 import MathBlock from "@/components/MathBlock";
 import Sketch from "@/components/Sketch";
 
-<Section number="01" title="Problem Statement">
+<Section number="01" title="Decrement baskets — payoff geometry">
 
-A basket option written on $n$ underlyings with weights $w_i$ has a payoff driven by the **aggregate move** of the basket. When pricing exotic derivatives on baskets — dispersion trades, worst-of structures, rainbow options — a key input is the **implied volatility surface of the basket itself**.
+Many **autocallable notes** on a **basket** combine a **worst-of** (or rank-dependent) underlying with a **decrement** mechanism: the conditional coupon is reduced (or memory is lost) when any name in the basket crosses a barrier schedule. The effective state variable is not the basket average but a **path-dependent functional** of the minima (or order statistics) of the components.
 
-In practice, liquid vanilla options exist on the individual underlyings, not on the basket directly. The task is to **reconstruct the basket's implied vol surface** — and in particular its **skew** — from single-stock information and a correlation structure.
+Let $M_t = \min_i \bigl(S_i(t)/S_i(0)\bigr)$ denote the **normalized worst-of** level. A stylized **decrement** coupon at observation $T_k$ can be written as:
+
+<MathBlock label="Decrement coupon (stylized)" number="1.1">
+
+$$
+\text{Coupon}_k = C_{\max} - \Delta C \cdot \sum_{j \leq k} \mathbf{1}\left[\min_{t \in [T_{j-1},T_j]} M_t \leq B_j\right]
+$$
+
+</MathBlock>
+
+with floors/caps omitted for clarity. The key observation: **any skew in the joint distribution of $(S_1,\ldots,S_n)$ near barriers feeds directly into decrement probabilities** — not only ATM basket vol.
 
 <Callout type="insight">
-  The basket skew is not a simple weighted average of single-stock skews. It depends non-linearly on correlations, and the reconstruction error can be significant for short-dated options or highly skewed underlyings.
+The **basket implied skew** relevant for decrement products is dominated by the **lower tail** of the joint distribution (worst-of events), not by the weighted-average stock skew used for dispersion-style basket options.
 </Callout>
 
-The basket price at time $T$ is:
+### Mapping to market data
 
-$$
-B_T = \sum_{i=1}^n w_i S_i(T)
-$$
-
-with $\sum_i w_i = 1$ (dollar-neutral or notional-weighted). We define the basket log-return as:
-
-$$
-X_B = \log\frac{B_T}{B_0}
-$$
+Vanillas on individual names give **marginal smiles**; index and multi-name exotics pin **implied correlation** and sometimes **correlation skew**. The task is to build a **consistent basket smile** for $M_t$ (or for a basket level $B_t = \sum_i w_i S_i$ when the payoff mixes both).
 
 </Section>
 
-<Section number="02" title="First-Order Approximation">
+<Section number="02" title="Implied skew of the worst-of">
 
-## Linear Vol Approximation
+Consider $n$ names with log-returns $X_i$ at horizon $T$. The **worst-of log-return** is $X_{\min} = \min_i X_i$. For Gaussian copula / jointly normal shocks with correlation matrix $\rho$:
 
-Under a **Gaussian correlation model** (all underlyings lognormal), the basket variance is:
-
-$$
-\sigma_B^2 \approx \sum_{i,j} w_i w_j \rho_{ij} \sigma_i \sigma_j
-$$
-
-This gives the **at-the-money vol** of the basket directly. Note this is the standard portfolio variance formula applied to log-returns.
-
-<MathBlock label="Basket ATM Variance" number="2.1">
+<MathBlock label="Worst-of variance (Gaussian copula, equal vol)" number="2.1">
 
 $$
-\sigma_B^2 = \mathbf{w}^\top \Sigma \mathbf{w}
+\sigma_{\min}^2 \approx \sigma^2 \left(1 - \frac{2}{\pi}(1-\bar\rho)\right)
 $$
-
-where $\Sigma_{ij} = \rho_{ij}\,\sigma_i\,\sigma_j$ is the covariance matrix.
 
 </MathBlock>
 
-The **first-order skew** of the basket can be derived via a cumulant expansion. Define the skewness of stock $i$ as $\kappa_3^{(i)}$ (the third standardized cumulant of $\log S_i$). Then:
+where $\bar\rho$ is a representative average pairwise correlation (exact formulas use quadrature over order statistics). More importantly, the **left tail** of $X_{\min}$ is **fatter** than that of any single name when $\rho<1$, but **thinner** than independent names — correlation controls tail pooling.
 
-$$
-\kappa_3^B \approx \frac{\sum_{i,j,k} w_i w_j w_k \,C_{ijk}}{\sigma_B^3}
-$$
+**Implied skew** for options on $M_T$ is driven by:
 
-where $C_{ijk} = \mathbb{E}[\delta X_i \, \delta X_j \, \delta X_k]$ is the **third-order co-cumulant** tensor.
+1. **Marginal skew** of each $S_i$ (via $X_i$ asymmetry).
+2. **Dependence structure** (copula / correlation skew) governing co-jumps into the worst-of.
+3. **Barrier sampling** — discrete monitoring **lifts** hitting probabilities vs continuous models.
 
 <Callout type="warning">
-  The co-cumulant tensor $C_{ijk}$ is rarely observable directly. In practice, one assumes a **diagonal approximation** where cross-stock third moments are set to zero. This underestimates basket skew when correlations are high.
+A common modelling trap is to price decrement baskets using **ATM basket vol** plus a **single-name skew overlay**. Near barriers, the **conditional law** of $M_t$ given *no prior decrement* is materially different from the unconditional law.
 </Callout>
 
 </Section>
 
-<Section number="03" title="Skew via Moment Matching">
+<Section number="03" title="From single-name smiles to basket skew">
 
-## The Moment Matching Approach
+A practical recipe used on desks:
 
-A cleaner method is to **match moments** of a parametric distribution (log-normal, SABR, SVI) to those computed from the basket's cumulants.
+### Step 1 — Marginals
 
-**Step 1** — Compute basket moments up to order 4:
+Calibrate each name to a parametric smile (SVI, SABR slice, or stochastic vol) so that $\sigma_i(K,T)$ is smooth and arbitrage-free.
+
+### Step 2 — Copula / correlation
+
+Choose a correlation matrix $\rho_{ij}(T)$ (possibly state-dependent). For **worst-of skew**, stress **basis correlation** scenarios: lowering $\rho_{ij}$ **increases** the mass on *divergent* paths where one name lags — often **increasing decrement risk** when barriers are name-specific.
+
+### Step 3 — Basket / min smile extraction
+
+Simulate $(S_1,\ldots,S_n)$ under the joint model; build the smile of $M_T$ (or of a basket index) by regression on vanilla payoffs or by FFT if a tractable characteristic function exists.
+
+<MathBlock label="Heuristic skew transfer" number="3.1">
 
 $$
-m_k^B = \mathbb{E}\left[\left(\frac{B_T - \mathbb{E}[B_T]}{\sigma_B}\right)^k\right], \quad k = 1,2,3,4
+\mathcal{S}_{M}(k) \;\approx\; \min_i \mathcal{S}_{i}(k) \;+\; \Phi(\rho,\kappa_3^{(i)},\text{barrier geometry})
 $$
-
-These can be expanded via Isserlis' theorem (Wick's theorem) when the $X_i$ are jointly Gaussian, and corrected for non-Gaussian marginals.
-
-**Step 2** — Fit a **Gram-Charlier expansion** of the basket density:
-
-<MathBlock label="Gram-Charlier Density" number="3.1">
-
-$$
-f_B(x) = \phi(x)\left[1 + \frac{\kappa_3^B}{6}H_3(x) + \frac{\kappa_4^B}{24}H_4(x) + \cdots \right]
-$$
-
-where $H_k$ are the **Hermite polynomials** and $\phi$ is the standard normal density.
 
 </MathBlock>
 
-**Step 3** — Extract the implied volatility smile:
+where $\mathcal{S}$ denotes a skew measure (e.g. 25Δ RR) and $\Phi$ collects **co-skew** adjustments from Gaussian or Edgeworth expansions.
 
-From the Gram-Charlier density, the implied vol can be approximated as:
-
-$$
-\sigma_{\text{imp}}(k) \approx \sigma_B\left[1 + \frac{\kappa_3^B}{6}k + \frac{\kappa_4^B - 3}{24}k^2\right]
-$$
-
-where $k = \log(K/F)/\sigma_B\sqrt{T}$ is the **normalized moneyness**.
-
-<Callout type="result">
-  The basket skew (slope of $\sigma_{\text{imp}}$ vs $k$) is proportional to $\kappa_3^B$. For a basket of negatively skewed stocks under positive correlation, the basket skew is weaker than the average single-stock skew — a fundamental result for dispersion trading.
+<Callout type="note">
+For **equal barriers** on all names, the worst-of event is symmetric in labels; for **heterogeneous barriers**, the skew is **concentrated** on the tightest names — always sort names by **barrier distance in local vol units** before reduction formulas.
 </Callout>
 
 </Section>
 
-<Section number="04" title="Correlation Weighting of Skew">
+<Section number="04" title="Forward skew and decrement conditionals">
 
-## How Correlation Dilutes Skew
+Decrement structures are **path-dependent**: conditioning on *no decrement so far* removes mass from trajectories that dipped near barriers. The **forward smile** relevant for the next period is therefore **conditioned**:
 
-One of the most important practical results: **higher correlation reduces the basket skew relative to the individual stock skews**.
+$$
+\sigma_{\text{impl}}^{\text{fwd}}(k) \;\text{ under }\; \mathbb{P}\bigl(\cdot \mid \forall j<k,\ \min_{[T_{j-1},T_j]} M_t > B_j\bigr)
+$$
 
-Intuitively: when stocks are fully correlated ($\rho_{ij} = 1$), the basket behaves like a single stock scaled by $\sum_i w_i \sigma_i$, and the skew is the **weighted average** of individual skews. When correlation falls, diversification kicks in and the basket distribution becomes more Gaussian by CLT arguments.
+**Local volatility** models tend to **flatten** this forward skew rapidly; **LSV** and **stochastic vol** preserve more forward smile and typically shift **decrement probabilities** vs LV (see the companion note on autocall hedging).
 
-<Sketch title="Basket Skew vs. Correlation" caption="Schematic of basket 25Δ skew as a function of average pairwise correlation ρ̄. At ρ̄=1, skew equals the weighted avg stock skew. At ρ̄=0, basket skew converges to ~0 (Gaussian limit).">
+<Sketch title="Worst-of tail vs. correlation" caption="Schematic: lower tail index of the min (quantile spread) vs average correlation. Lower ρ widens the left tail of the worst-of — higher decrement sensitivity to skew misspecification.">
   <svg viewBox="0 0 520 280" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-[520px]">
-    {/* Grid lines */}
     {[0,1,2,3,4].map(i => (
       <line key={`h${i}`} x1="60" y1={40 + i * 50} x2="480" y2={40 + i * 50}
         stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
@@ -132,92 +115,34 @@ Intuitively: when stocks are fully correlated ($\rho_{ij} = 1$), the basket beha
       <line key={`v${i}`} x1={60 + i * 84} y1="40" x2={60 + i * 84} y2="240"
         stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
     ))}
-
-    {/* Axes */}
     <line x1="60" y1="240" x2="480" y2="240" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
     <line x1="60" y1="40" x2="60" y2="240" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
-
-    {/* Basket skew curve (concave, from low at rho=0 to high at rho=1) */}
-    <path d="M 60 220 C 120 210, 200 190, 280 160 C 340 138, 400 110, 480 72"
-      stroke="#7aa2ff" strokeWidth="2" fill="none" strokeLinecap="round"/>
-
-    {/* Weighted avg stock skew line (flat reference) */}
-    <line x1="60" y1="72" x2="480" y2="72"
-      stroke="rgba(246,193,119,0.5)" strokeWidth="1.5" strokeDasharray="5,4"/>
-
-    {/* Gaussian limit dashed */}
-    <line x1="60" y1="220" x2="60" y2="40"
-      stroke="rgba(167,139,250,0.2)" strokeWidth="1" strokeDasharray="3,4"/>
-
-    {/* Axis labels */}
-    <text x="270" y="265" fill="rgba(154,163,178,0.7)" fontSize="11" textAnchor="middle" fontFamily="monospace">average correlation ρ̄</text>
-    <text x="20" y="145" fill="rgba(154,163,178,0.7)" fontSize="11" textAnchor="middle" fontFamily="monospace" transform="rotate(-90,20,145)">25Δ skew</text>
-
-    {/* Tick labels x */}
-    {["0", "0.2", "0.4", "0.6", "0.8", "1"].map((v, i) => (
-      <text key={v} x={60 + i * 84} y="256" fill="rgba(154,163,178,0.5)" fontSize="9" textAnchor="middle" fontFamily="monospace">{v}</text>
+    <path d="M 60 95 C 140 115, 220 145, 300 168 C 360 185, 420 200, 480 212"
+      stroke="var(--accent)" strokeWidth="2" fill="none" strokeLinecap="round" style={{ filter: "drop-shadow(0 0 4px var(--accent-glow))" }} />
+    <text x="270" y="265" fill="var(--text-3)" fontSize="11" textAnchor="middle" fontFamily="var(--font-mono),monospace">average correlation ρ̄</text>
+    <text x="22" y="145" fill="var(--text-3)" fontSize="11" textAnchor="middle" fontFamily="var(--font-mono),monospace" transform="rotate(-90,22,145)">left-tail spread (worst-of)</text>
+    {["0.2","0.35","0.5","0.65","0.8","0.95"].map((v, i) => (
+      <text key={v} x={60 + i * 84} y="256" fill="var(--text-4)" fontSize="9" textAnchor="middle" fontFamily="var(--font-mono),monospace">{v}</text>
     ))}
-
-    {/* Legend */}
-    <line x1="290" y1="190" x2="315" y2="190" stroke="#7aa2ff" strokeWidth="2"/>
-    <text x="320" y="194" fill="#9aa3b2" fontSize="10" fontFamily="sans-serif">Basket skew</text>
-    <line x1="290" y1="208" x2="315" y2="208" stroke="rgba(246,193,119,0.6)" strokeWidth="1.5" strokeDasharray="4,3"/>
-    <text x="320" y="212" fill="#9aa3b2" fontSize="10" fontFamily="sans-serif">Wtd avg stock skew</text>
-
-    {/* Annotation at rho=1 */}
-    <circle cx="480" cy="72" r="3" fill="#7aa2ff"/>
-    <text x="456" y="66" fill="rgba(122,162,255,0.7)" fontSize="9" textAnchor="middle" fontFamily="monospace">converge</text>
+    <line x1="300" y1="175" x2="328" y2="175" stroke="var(--accent)" strokeWidth="2"/>
+    <text x="334" y="179" fill="var(--text-3)" fontSize="10" fontFamily="var(--font-body),sans-serif">Tail widening as ρ̄ ↓</text>
   </svg>
 </Sketch>
 
-The **skew ratio** — basket skew divided by weighted average single-stock skew — can be approximated as:
-
-$$
-\text{SR}(\bar\rho) \approx \bar\rho \cdot \frac{\sigma_B}{\sum_i w_i \sigma_i}
-$$
-
-where $\bar\rho$ is the average pairwise correlation. This ratio is always $\leq 1$ since by Cauchy-Schwarz:
-
-$$
-\sigma_B = \sqrt{\mathbf{w}^\top \Sigma \mathbf{w}} \leq \sum_i w_i \sigma_i
-$$
-
 </Section>
 
-<Section number="05" title="Practical Implementation">
+<Section number="05" title="Implementation checklist">
 
-## Implementation Notes
+| Item | Purpose |
+|------|---------|
+| Marginal smiles + no-arb checks | Stable $\sigma_i(K,T)$ for simulation |
+| Correlation / copula stress grid | Bounds on worst-of tail |
+| Barrier monitoring (discrete) | Coupon step and PRDC-style discontinuities |
+| Forward skew under survival | Conditionals for remaining coupons |
+| Model reserve (LV vs LSV) | Capture forward smile uncertainty |
 
-In practice, the reconstruction is done numerically via **Monte Carlo simulation** of the basket under the calibrated single-stock surfaces:
-
-1. Calibrate each $S_i$ to a stochastic vol model (SABR, Heston, or SVI parametrization)
-2. Specify a correlation matrix $\rho$ (from historical estimation or calibration to index options)
-3. Simulate $B_T = \sum_i w_i S_i(T)$ under the joint distribution
-4. Extract the smile of $B_T$ from simulated payoffs via regression or direct histogram
-
-<Callout type="note">
-  For fast calibration loops, the moment-based approach (Sections 2–3) is preferred as a warm-start. The Monte Carlo step validates and refines the result.
-</Callout>
-
-### Correlation Sensitivity
-
-The key risk parameter for dispersion traders is $\partial \sigma_B / \partial \rho_{ij}$. From the ATM formula:
-
-$$
-\frac{\partial \sigma_B}{\partial \rho_{ij}} = \frac{w_i w_j \sigma_i \sigma_j}{\sigma_B}
-$$
-
-Large-weight stocks with high individual vols dominate the sensitivity. This is the core of the **correlation risk** in dispersion books.
-
-| Parameter | Impact on Basket Skew | Sign |
-|-----------|----------------------|------|
-| ↑ Correlation | Increases basket skew | + |
-| ↑ Weight concentration | Increases basket skew | + |
-| ↑ Stock count (equal weights) | Decreases basket skew (CLT) | − |
-| ↑ Individual stock skew | Increases basket skew | + |
-
-<Callout type="result">
-  **Dispersion trade intuition**: Long dispersion (long single-stock vol, short index vol) profits when realized correlation is lower than the implied level embedded in the index smile. The skew differential is the forward-looking indicator of this trade's value.
+<Callout type="result" title="Desk summary">
+For **decrement baskets**, hedge ratios to **single-name skew** are **concentrated** in the names closest to barriers in **local-vol distance**. A robust book aggregates **skew sensitivities by barrier cohort**, not by notional weight alone.
 </Callout>
 
 </Section>

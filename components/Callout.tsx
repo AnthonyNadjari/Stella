@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import clsx from "clsx";
 
 type CalloutType = "insight" | "warning" | "result" | "note" | "definition";
 
@@ -9,97 +8,94 @@ interface CalloutProps {
   children: ReactNode;
 }
 
-const CALLOUT_CONFIG: Record<
-  CalloutType,
-  {
-    label: string;
-    icon: string;
-    border: string;
-    bg: string;
-    labelColor: string;
-    glow: string;
-  }
-> = {
+const CONFIG: Record<CalloutType, {
+  label: string;
+  icon: string;
+  borderColor: string;
+  bgColor: string;
+  labelColor: string;
+  glowColor: string;
+  textColor: string;
+}> = {
   insight: {
     label: "INSIGHT",
     icon: "◈",
-    border: "border-comet-blue/30",
-    bg: "bg-comet-blue-glow",
-    labelColor: "text-comet-blue",
-    glow: "shadow-glow-blue-sm",
+    borderColor: "rgba(122,162,255,0.3)",
+    bgColor: "rgba(122,162,255,0.07)",
+    labelColor: "var(--accent)",
+    glowColor: "rgba(122,162,255,0.15)",
+    textColor: "var(--text-2)",
   },
   warning: {
     label: "WARNING",
     icon: "⚠",
-    border: "border-gold-400/30",
-    bg: "bg-gold-glow",
-    labelColor: "text-gold-400",
-    glow: "shadow-glow-gold",
+    borderColor: "rgba(246,193,119,0.35)",
+    bgColor: "rgba(246,193,119,0.07)",
+    labelColor: "var(--gold)",
+    glowColor: "rgba(246,193,119,0.12)",
+    textColor: "var(--text-2)",
   },
   result: {
     label: "RESULT",
     icon: "✦",
-    border: "border-violet-400/30",
-    bg: "bg-violet-glow",
-    labelColor: "text-violet-400",
-    glow: "shadow-glow-violet",
+    borderColor: "rgba(167,139,250,0.35)",
+    bgColor: "rgba(167,139,250,0.07)",
+    labelColor: "var(--violet)",
+    glowColor: "rgba(167,139,250,0.15)",
+    textColor: "var(--text-2)",
   },
   note: {
     label: "NOTE",
     icon: "◎",
-    border: "border-ink-600/30",
-    bg: "bg-white/2",
-    labelColor: "text-ink-400",
-    glow: "",
+    borderColor: "var(--border-mid)",
+    bgColor: "var(--surface-2)",
+    labelColor: "var(--text-3)",
+    glowColor: "transparent",
+    textColor: "var(--text-2)",
   },
   definition: {
     label: "DEFINITION",
     icon: "◇",
-    border: "border-comet-blue/20",
-    bg: "bg-comet-blue-glow",
-    labelColor: "text-comet-blue",
-    glow: "shadow-glow-blue-sm",
+    borderColor: "rgba(122,162,255,0.25)",
+    bgColor: "rgba(122,162,255,0.05)",
+    labelColor: "var(--accent)",
+    glowColor: "rgba(122,162,255,0.1)",
+    textColor: "var(--text-2)",
   },
 };
 
 export default function Callout({ type = "insight", title, children }: CalloutProps) {
-  const config = CALLOUT_CONFIG[type];
+  const c = CONFIG[type];
 
   return (
     <div
-      className={clsx(
-        "my-7 rounded-lg border px-5 py-4 relative overflow-hidden",
-        config.border,
-        config.bg,
-        config.glow
-      )}
+      className="my-5 rounded-xl relative overflow-hidden"
+      style={{
+        border: `1px solid ${c.borderColor}`,
+        background: c.bgColor,
+        boxShadow: `0 0 20px ${c.glowColor}, inset 0 1px 0 rgba(255,255,255,0.04)`,
+        padding: "0.9rem 1.1rem",
+      }}
     >
-      {/* Subtle background pattern */}
+      {/* Top accent line */}
       <div
-        className="absolute inset-0 opacity-20 pointer-events-none"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 100% 0%, rgba(122,162,255,0.08) 0%, transparent 60%)",
-        }}
+        className="absolute top-0 left-4 right-4 h-px"
+        style={{ background: `linear-gradient(90deg, transparent, ${c.borderColor}, transparent)` }}
       />
 
       {/* Label */}
-      <div className="flex items-center gap-2 mb-2">
-        <span className={clsx("text-xs font-mono", config.labelColor)}>
-          {config.icon}
-        </span>
+      <div className="flex items-center gap-1.5 mb-2">
+        <span className="text-xs font-mono" style={{ color: c.labelColor }}>{c.icon}</span>
         <span
-          className={clsx(
-            "text-[10px] font-semibold tracking-widest uppercase font-mono",
-            config.labelColor
-          )}
+          className="text-[10px] font-semibold tracking-widest uppercase font-mono"
+          style={{ color: c.labelColor }}
         >
-          {title || config.label}
+          {title || c.label}
         </span>
       </div>
 
       {/* Content */}
-      <div className="text-sm text-ink-200 leading-relaxed [&>p]:m-0 [&>p+p]:mt-2">
+      <div className="text-sm leading-relaxed" style={{ color: c.textColor }}>
         {children}
       </div>
     </div>

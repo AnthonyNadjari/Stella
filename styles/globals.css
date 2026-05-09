@@ -2,305 +2,387 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── KaTeX ────────────────────────────────────────────────────── */
 @import "katex/dist/katex.min.css";
 
-/* ─── Custom Properties ─────────────────────────────────────────── */
+/* ─── Design tokens ──────────────────────────────────────────────── */
 :root {
-  --sidebar-width: 272px;
-  --topbar-height: 56px;
-  --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Dark (default) — deep space, vivid */
+  --bg:             #050710;
+  --bg-2:           #07091a;
+  --surface:        #0b0e1f;
+  --surface-2:      #111528;
+  --surface-3:      #181c33;
+  --border:         rgba(96,165,250,0.09);
+  --border-mid:     rgba(96,165,250,0.16);
+  --text-1:         #eef2ff;
+  --text-2:         #b0bcd6;
+  --text-3:         #7a88a8;
+  --text-4:         #435070;
+  --accent:         #60a5fa;
+  --accent-dim:     rgba(96,165,250,0.12);
+  --accent-glow:    rgba(96,165,250,0.32);
+  --accent-str:     rgba(96,165,250,0.55);
+  --violet:         #c084fc;
+  --violet-dim:     rgba(192,132,252,0.12);
+  --gold:           #fbbf24;
+  --gold-dim:       rgba(251,191,36,0.12);
+  --teal:           #2dd4bf;
+  --sidebar-bg:     linear-gradient(165deg,#04060f 0%,#060818 60%,#050710 100%);
+  --topbar-bg:      rgba(5,7,16,0.92);
+  --topbar-border:  rgba(96,165,250,0.08);
+  --code-bg:        #0a0d1e;
+  --pre-bg:         #070918;
+  --star-opacity:   1;
 
-  /* Font stacks — system fonts, no network required */
-  --font-display: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, "Times New Roman", serif;
-  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "Fira Code", "Cascadia Code", "Consolas", "Monaco", "Courier New", monospace;
+  --font-display: "Optima","Segoe UI","Candara","Trebuchet MS",system-ui,sans-serif;
+  --font-body: -apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --font-mono: "Cascadia Code","Fira Code",Consolas,Monaco,"Courier New",monospace;
 }
 
-/* ─── Base Reset ─────────────────────────────────────────────────── */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+html.light {
+  /* Light — warm parchment, deep navy accents */
+  --bg:             #f6f3ee;
+  --bg-2:           #ede9e2;
+  --surface:        #fdfcf9;
+  --surface-2:      #ede9e2;
+  --surface-3:      #e2ddd6;
+  --border:         rgba(30,64,175,0.10);
+  --border-mid:     rgba(30,64,175,0.18);
+  --text-1:         #0a0c1a;
+  --text-2:         #1e2540;
+  --text-3:         #404870;
+  --text-4:         #7878a0;
+  --accent:         #1e40af;
+  --accent-dim:     rgba(30,64,175,0.09);
+  --accent-glow:    rgba(30,64,175,0.22);
+  --accent-str:     rgba(30,64,175,0.45);
+  --violet:         #6d28d9;
+  --violet-dim:     rgba(109,40,217,0.09);
+  --gold:           #b45309;
+  --gold-dim:       rgba(180,83,9,0.10);
+  --teal:           #0f766e;
+  --sidebar-bg:     linear-gradient(165deg,#eae6df 0%,#ede9e3 60%,#e6e2dc 100%);
+  --topbar-bg:      rgba(246,243,238,0.94);
+  --topbar-border:  rgba(30,64,175,0.10);
+  --code-bg:        #e8e4dc;
+  --pre-bg:         #ede9e2;
+  --star-opacity:   0;
 }
 
-html {
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
+/* ─── Base ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 
 body {
-  background-color: #07090f;
-  color: #e8ecf5;
+  background-color: var(--bg);
+  /* Ambient nebula — as bg-image, not fixed divs (avoids iOS Safari circle bug) */
+  background-image:
+    radial-gradient(ellipse 80% 40% at 60% 0%, rgba(96,165,250,0.07) 0%, transparent 100%),
+    radial-gradient(ellipse 60% 50% at 15% 80%, rgba(192,132,252,0.05) 0%, transparent 100%);
+  color: var(--text-1);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* ─── Scrollbar ──────────────────────────────────────────────────── */
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(122, 162, 255, 0.15);
-  border-radius: 2px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(122, 162, 255, 0.3);
+html.light body {
+  background-image: none;
 }
 
-/* ─── Selection ──────────────────────────────────────────────────── */
-::selection {
-  background: rgba(122, 162, 255, 0.25);
-  color: #e8ecf5;
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-str); }
+::selection { background: var(--accent-dim); color: var(--text-1); }
+:focus-visible { outline: 1.5px solid var(--accent-str); outline-offset: 2px; }
+
+/* ─── Structural ─────────────────────────────────────────────────── */
+.stella-sidebar {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  transition: background 0.25s ease;
 }
 
-/* ─── Focus Outline ──────────────────────────────────────────────── */
-:focus-visible {
-  outline: 1.5px solid rgba(122, 162, 255, 0.5);
-  outline-offset: 2px;
+.stella-topbar {
+  background: var(--topbar-bg);
+  border-bottom: 1px solid var(--topbar-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-/* ─── Star Field ─────────────────────────────────────────────────── */
-.star-layer {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
+/* ─── Sidebar navigation items ──────────────────────────────────── */
+.sidebar-item {
+  display: block;
+  transition: color 0.15s, background 0.15s;
 }
 
-.star {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  background: white;
-  border-radius: 50%;
+.sidebar-item--active {
+  color: var(--accent);
+  font-weight: 500;
+  background: var(--accent-dim);
 }
 
-.star-twinkle {
-  animation: twinkle var(--duration, 4s) ease-in-out infinite;
-  animation-delay: var(--delay, 0s);
+.sidebar-item--default {
+  color: var(--text-3);
 }
 
-@keyframes twinkle {
-  0%, 100% { opacity: var(--min-opacity, 0.1); }
-  50% { opacity: var(--max-opacity, 0.5); }
+.sidebar-item--default:hover {
+  color: var(--text-2);
+  background: rgba(96,165,250,0.05);
 }
 
-/* ─── Shooting star ──────────────────────────────────────────────── */
-.shooting-star {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  background: linear-gradient(90deg, #ffffff, transparent);
-  border-radius: 50%;
-  animation: shoot var(--shoot-duration, 6s) ease-in-out infinite;
-  animation-delay: var(--shoot-delay, 0s);
-  opacity: 0;
+html.light .sidebar-item--default:hover {
+  background: rgba(30,64,175,0.05);
 }
 
-@keyframes shoot {
-  0% {
-    transform: translateX(0) translateY(0) scaleX(1);
-    opacity: 0;
-  }
-  5% { opacity: 0.8; }
-  15% {
-    transform: translateX(300px) translateY(150px) scaleX(60);
-    opacity: 0;
-  }
-  100% {
-    transform: translateX(300px) translateY(150px) scaleX(60);
-    opacity: 0;
-  }
-}
-
-/* ─── Sidebar comet trail ────────────────────────────────────────── */
-.sidebar-item-active {
+/* ─── Note cards ─────────────────────────────────────────────────── */
+.note-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
   position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 
-.sidebar-item-active::before {
+.note-card::after {
   content: "";
   position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  left: 0; top: 0; bottom: 0;
   width: 3px;
-  height: 60%;
-  border-radius: 0 2px 2px 0;
-  background: #7aa2ff;
-  box-shadow: 0 0 8px rgba(122, 162, 255, 0.6), 0 0 16px rgba(122, 162, 255, 0.2);
+  background: linear-gradient(180deg, var(--accent), var(--violet));
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
-.sidebar-item-active::after {
-  content: "";
-  position: absolute;
-  left: 3px;
-  top: 0;
-  bottom: 0;
-  width: 100%;
-  background: linear-gradient(90deg, rgba(122, 162, 255, 0.08) 0%, transparent 70%);
-  pointer-events: none;
-  border-radius: 0 4px 4px 0;
+.note-card:hover {
+  border-color: var(--border-mid);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18), 0 0 0 1px var(--accent-dim);
+  transform: translateY(-1px);
 }
 
-/* ─── KaTeX overrides ────────────────────────────────────────────── */
-.katex {
-  font-size: 1em;
-  color: #e8ecf5;
+.note-card:hover::after { opacity: 1; }
+
+/* ─── Gradient separator ─────────────────────────────────────────── */
+.gradient-sep {
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent-str) 0%, var(--violet-dim) 50%, transparent 100%);
+  margin-bottom: 0.75rem;
+  margin-top: 0.5rem;
 }
 
-.katex-display {
-  margin: 2em 0;
+/* ─── Stars ──────────────────────────────────────────────────────── */
+.star-canvas {
+  opacity: var(--star-opacity);
+  transition: opacity 0.4s ease;
+}
+
+/* ─── Page enter ─────────────────────────────────────────────────── */
+.page-enter {
+  animation: pageEnter 0.3s ease forwards;
+}
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Glow pulse ─────────────────────────────────────────────────── */
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+@keyframes pulseGlow {
+  0%,100% { opacity: 0.3; box-shadow: 0 0 0 0 var(--accent-dim); }
+  50%      { opacity: 1;   box-shadow: 0 0 6px 2px var(--accent-glow); }
+}
+
+/* ─── Gradient text — subtle 2-stop only ────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent) 20%, var(--violet) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── KaTeX ──────────────────────────────────────────────────────── */
+.katex { font-size: 1.05em; color: var(--text-1) !important; }
+.katex-display { margin: 1.25em 0; overflow-x: auto; }
+.katex-display .katex { color: var(--text-1) !important; }
+.katex-html { color: var(--text-1) !important; }
+
+/* ─── Prose ──────────────────────────────────────────────────────── */
+.prose-stella {
+  color: var(--text-2);
+  font-size: 0.9375rem;
+  line-height: 1.75;
+}
+.prose-stella h1,.prose-stella h2,.prose-stella h3,.prose-stella h4 {
+  font-family: var(--font-display);
+  color: var(--text-1);
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.prose-stella h2 { font-size: 1.2rem; margin: 1.75em 0 0.6em; }
+.prose-stella h3 { font-size: 1.05rem; margin: 1.4em 0 0.45em; color: var(--text-2); }
+.prose-stella p  { margin: 0.85em 0; }
+.prose-stella strong { color: var(--text-1); font-weight: 600; }
+.prose-stella em { color: var(--text-2); font-style: italic; }
+.prose-stella a { color: var(--accent); text-decoration: none; }
+.prose-stella a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.prose-stella code {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  background: var(--code-bg);
+  color: var(--accent);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.prose-stella pre {
+  background: var(--pre-bg) !important;
+  border: 1px solid var(--border-mid);
+  border-radius: 8px;
   overflow-x: auto;
-  padding: 0.5em 0;
+  padding: 1rem 1.25rem;
+  margin: 1.2em 0;
+}
+.prose-stella pre code {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  color: var(--text-2);
+  font-size: 0.84em;
+}
+.prose-stella blockquote {
+  border-left: 2px solid var(--accent);
+  padding-left: 1em;
+  color: var(--text-3);
+  font-style: italic;
+  margin: 0.9em 0;
+}
+.prose-stella hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent-str), var(--violet-dim), transparent);
+  margin: 1.75em 0;
 }
 
-.katex-display > .katex {
-  color: #e8ecf5;
-}
-
-/* ─── Prose customizations ───────────────────────────────────────── */
+/* ─── Tables ─────────────────────────────────────────────────────── */
 .prose-stella table {
+  width: 100%;
+  font-size: 0.86em;
   border-collapse: separate;
   border-spacing: 0;
-  width: 100%;
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid var(--border-mid);
   border-radius: 8px;
   overflow: hidden;
+  margin: 1.2em 0;
+}
+.prose-stella thead {
+  background: var(--surface-2);
+}
+.prose-stella thead th {
+  padding: 0.55em 1em;
+  text-align: left;
+  font-size: 0.7em;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border-mid);
+}
+.prose-stella tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+.prose-stella tbody tr:last-child { border-bottom: none; }
+.prose-stella tbody tr:hover { background: var(--accent-dim); }
+.prose-stella tbody td {
+  padding: 0.55em 1em;
+  color: var(--text-2);
+  vertical-align: top;
 }
 
-.prose-stella thead th:first-child { border-radius: 8px 0 0 0; }
-.prose-stella thead th:last-child  { border-radius: 0 8px 0 0; }
-
-.prose-stella thead tr {
-  background: rgba(122, 162, 255, 0.04);
-}
-
-/* ─── Glow utilities ─────────────────────────────────────────────── */
-@layer utilities {
-  .glow-blue {
-    box-shadow: 0 0 20px rgba(122, 162, 255, 0.15);
-  }
-  .glow-blue-sm {
-    box-shadow: 0 0 10px rgba(122, 162, 255, 0.1);
-  }
-  .glow-violet {
-    box-shadow: 0 0 20px rgba(167, 139, 250, 0.15);
-  }
-  .glow-gold {
-    box-shadow: 0 0 20px rgba(246, 193, 119, 0.12);
-  }
-  .text-glow-blue {
-    text-shadow: 0 0 20px rgba(122, 162, 255, 0.5);
-  }
-  .gradient-separator {
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(122, 162, 255, 0.15) 30%,
-      rgba(167, 139, 250, 0.1) 60%,
-      transparent 100%
-    );
-  }
-}
-
-/* ─── Page transition ────────────────────────────────────────────── */
-.page-enter {
-  animation: pageEnter 0.35s ease forwards;
-}
-
-@keyframes pageEnter {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ─── Sidebar hover trail ────────────────────────────────────────── */
-.nav-item {
-  position: relative;
-  transition: color 0.2s ease;
-}
-
-.nav-item::after {
-  content: "";
+/* ─── Lists ──────────────────────────────────────────────────────── */
+.prose-stella ul { list-style: none; padding-left: 1.1em; margin: 0.7em 0; }
+.prose-stella ul li { position: relative; margin: 0.28em 0; }
+.prose-stella ul li::before {
+  content: "◦";
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 0%;
-  background: linear-gradient(90deg, rgba(122, 162, 255, 0.06) 0%, transparent 100%);
-  transition: width 0.3s var(--transition-smooth);
-  pointer-events: none;
-  border-radius: 0 4px 4px 0;
+  left: -1em;
+  color: var(--accent);
+  font-size: 1em;
+  line-height: inherit;
+}
+.prose-stella ol { padding-left: 1.4em; margin: 0.7em 0; }
+.prose-stella ol li { margin: 0.28em 0; color: var(--text-2); }
+
+/* ─── Nav link ───────────────────────────────────────────────────── */
+.nav-link {
+  display: block;
+  padding: 0.32rem 0.7rem;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.nav-item:hover::after {
-  width: 100%;
+/* ─── Constellation bg ───────────────────────────────────────────── */
+.constellation-bg {
+  background-image: radial-gradient(circle, rgba(96,165,250,0.07) 1px, transparent 1px);
+  background-size: 26px 26px;
 }
 
-/* ─── Math block inner glow ──────────────────────────────────────── */
-.math-block-inner {
-  position: relative;
+html.light .constellation-bg {
+  background-image: radial-gradient(circle, rgba(30,64,175,0.06) 1px, transparent 1px);
 }
 
-.math-block-inner::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(ellipse at 50% 100%, rgba(122, 162, 255, 0.05) 0%, transparent 70%);
-  pointer-events: none;
+/* ─── Search modal ───────────────────────────────────────────────── */
+.stella-search {
+  background: var(--surface);
+  border: 1px solid var(--border-mid);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 24px 60px rgba(0,0,0,0.5), 0 0 80px var(--accent-dim);
 }
 
-/* ─── Sketch block depth ─────────────────────────────────────────── */
-.sketch-frame {
-  position: relative;
+/* ─── Stats bar ──────────────────────────────────────────────────── */
+.stella-stats {
+  background: var(--surface);
+  border: 1px solid var(--border-mid);
+  box-shadow: 0 0 0 1px var(--accent-dim);
 }
 
-.sketch-frame::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(122, 162, 255, 0.1), rgba(167, 139, 250, 0.05), transparent);
-  z-index: -1;
-}
-
-/* ─── Search highlight ───────────────────────────────────────────── */
+/* ─── Mark / highlight ───────────────────────────────────────────── */
 mark {
-  background: rgba(122, 162, 255, 0.25);
-  color: #e8ecf5;
+  background: var(--accent-dim);
+  color: var(--accent);
   padding: 0.05em 0.2em;
   border-radius: 2px;
 }
 
-/* ─── Note card hover ────────────────────────────────────────────── */
-.note-card {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.05);
+/* ─── Mobile close button fix ────────────────────────────────────── */
+.mobile-toggle {
+  background: rgba(96,165,250,0.08) !important;
+  border: 1px solid rgba(96,165,250,0.2) !important;
+  color: var(--accent) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.note-card:hover {
-  border-color: rgba(122,162,255,0.12);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 0 20px rgba(122,162,255,0.05);
+html.light .mobile-toggle {
+  background: rgba(30,64,175,0.08) !important;
+  border: 1px solid rgba(30,64,175,0.2) !important;
+  color: var(--accent) !important;
 }
 
-/* ─── Responsive layout ──────────────────────────────────────────── */
-@media (max-width: 768px) {
-  :root {
-    --sidebar-width: 0px;
-  }
+/* ─── Responsive ─────────────────────────────────────────────────── */
+.stella-topbar-offset { left: 260px; }
+
+@media (max-width: 767px) {
+  .md-main { margin-left: 0 !important; }
+  .stella-topbar-offset { left: 0 !important; }
 }

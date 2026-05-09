@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ChevronDown, ChevronRight, BookOpen, Menu, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Menu, X } from "lucide-react";
 import clsx from "clsx";
 import type { NoteMetadata } from "@/lib/notes";
 
@@ -11,29 +11,12 @@ interface SidebarProps {
   notesByCategory: Record<string, NoteMetadata[]>;
 }
 
-const CATEGORY_ORDER = [
-  "Equity",
-  "Volatility",
-  "Rates",
-  "Structured Products",
-  "Stochastic Calculus",
-  "Numerical Methods",
-  "General",
-];
-
-const CATEGORY_ICONS: Record<string, string> = {
-  Equity: "◈",
-  Volatility: "◎",
-  Rates: "◇",
-  "Structured Products": "◉",
-  "Stochastic Calculus": "○",
-  "Numerical Methods": "◫",
-  General: "·",
-};
+const CATEGORY_ORDER = ["Equity","Volatility","Rates","Structured Products","Stochastic Calculus","Numerical Methods","General"];
 
 export default function Sidebar({ notesByCategory }: SidebarProps) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [catCollapsed, setCatCollapsed] = useState<Record<string, boolean>>({});
+  const [tocCollapsed, setTocCollapsed] = useState<Record<string, boolean>>({});
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const orderedCategories = [
@@ -41,137 +24,130 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
     ...Object.keys(notesByCategory).filter((c) => !CATEGORY_ORDER.includes(c)),
   ];
 
-  function toggleCategory(cat: string) {
-    setCollapsed((prev) => ({ ...prev, [cat]: !prev[cat] }));
-  }
-
   function isActive(notePath: string) {
     return pathname === `/notes/${notePath}/` || pathname === `/notes/${notePath}`;
   }
 
-  const sidebarContent = (
-    <nav className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="px-5 py-5 border-b border-white/5">
-        <Link href="/" onClick={() => setMobileOpen(false)}>
-          <div className="flex items-center gap-2.5 group">
-            <div className="relative w-7 h-7 flex items-center justify-center">
-              {/* Star/comet icon */}
-              <svg viewBox="0 0 28 28" fill="none" className="w-full h-full">
-                <circle cx="14" cy="14" r="2.5" fill="#7aa2ff" />
-                <circle cx="14" cy="14" r="2.5" fill="#7aa2ff" className="animate-pulse-glow" style={{ filter: "blur(3px)", opacity: 0.6 }} />
-                {[0, 60, 120, 180, 240, 300].map((angle, i) => {
-                  const r = i % 2 === 0 ? 11 : 8;
-                  const x = 14 + r * Math.cos((angle * Math.PI) / 180);
-                  const y = 14 + r * Math.sin((angle * Math.PI) / 180);
-                  return (
-                    <circle
-                      key={angle}
-                      cx={x}
-                      cy={y}
-                      r={i % 2 === 0 ? 0.8 : 0.5}
-                      fill="#7aa2ff"
-                      opacity={i % 2 === 0 ? 0.6 : 0.3}
-                    />
-                  );
-                })}
-                {[0, 60, 120, 180, 240, 300].map((angle, i) => {
-                  if (i % 2 !== 0) return null;
-                  const r1 = 4;
-                  const r2 = 11;
-                  const x1 = 14 + r1 * Math.cos((angle * Math.PI) / 180);
-                  const y1 = 14 + r1 * Math.sin((angle * Math.PI) / 180);
-                  const x2 = 14 + r2 * Math.cos((angle * Math.PI) / 180);
-                  const y2 = 14 + r2 * Math.sin((angle * Math.PI) / 180);
-                  return (
-                    <line
-                      key={`line-${angle}`}
-                      x1={x1} y1={y1}
-                      x2={x2} y2={y2}
-                      stroke="#7aa2ff"
-                      strokeWidth="0.5"
-                      opacity="0.2"
-                    />
-                  );
-                })}
-              </svg>
+  const totalNotes = Object.values(notesByCategory).flat().length;
+
+  const content = (
+    <nav className="flex flex-col h-full overflow-hidden">
+
+      {/* ── Logo ── */}
+      <div className="px-4 py-4 shrink-0" style={{ borderBottom: "1px solid var(--border)" }}>
+        <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-3">
+          {/* Mark: simple diamond cross */}
+          <div className="shrink-0" style={{ color: "var(--accent)", fontSize: "20px", lineHeight: 1, opacity: 0.9 }}>
+            ✦
+          </div>
+          <div>
+            <div style={{
+              fontFamily: "var(--font-mono)",
+              color: "var(--text-1)",
+              fontSize: "13px",
+              fontWeight: 700,
+              letterSpacing: "0.22em",
+            }}>
+              STELLA
             </div>
-            <div>
-              <div className="text-[15px] font-display font-semibold tracking-wide text-ink-100 group-hover:text-comet-blue transition-colors">
-                STELLA
-              </div>
-              <div className="text-[10px] text-ink-600 tracking-widest uppercase">
-                Knowledge
-              </div>
+            <div style={{ fontFamily: "var(--font-mono)", color: "var(--text-4)", fontSize: "9px", letterSpacing: "0.16em" }}>
+              KNOWLEDGE SYSTEM
             </div>
           </div>
         </Link>
       </div>
 
-      {/* Nav items */}
-      <div className="flex-1 overflow-y-auto py-4 px-2 space-y-0.5">
-        {/* Home */}
+      {/* ── Nav ── */}
+      <div className="flex-1 overflow-y-auto py-2">
+
+        {/* Overview */}
         <Link
           href="/"
           onClick={() => setMobileOpen(false)}
-          className={clsx(
-            "nav-item flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-all duration-200",
-            pathname === "/"
-              ? "sidebar-item-active text-ink-100 bg-comet-blue-glow"
-              : "text-ink-400 hover:text-ink-200 hover:bg-white/3"
-          )}
+          className={clsx("sidebar-item flex items-center gap-2 mx-2 px-3 py-2 rounded text-[13px] transition-colors", pathname === "/" ? "sidebar-item--active" : "sidebar-item--default")}
         >
-          <BookOpen size={13} className="shrink-0 opacity-70" />
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", opacity: 0.6 }}>⊞</span>
           <span>Overview</span>
         </Link>
 
-        {/* Separator */}
-        <div className="gradient-separator h-px my-3 mx-2" />
+        {/* Divider */}
+        <div className="mx-3 my-2" style={{ height: "1px", background: "var(--border)" }} />
 
         {/* Categories */}
         {orderedCategories.map((category) => {
           const notes = notesByCategory[category];
-          const isOpen = collapsed[category] !== true; // open by default
-          const icon = CATEGORY_ICONS[category] || "·";
+          const catOpen = catCollapsed[category] !== true;
 
           return (
             <div key={category} className="mb-1">
+              {/* Category toggle */}
               <button
-                onClick={() => toggleCategory(category)}
-                className="w-full flex items-center justify-between px-3 py-1.5 rounded-md group transition-all duration-200 hover:bg-white/3"
+                onClick={() => setCatCollapsed((p) => ({ ...p, [category]: !p[category] }))}
+                className="w-full flex items-center justify-between px-5 py-1 hover:text-accent transition-colors"
+                style={{ color: "var(--text-4)", fontFamily: "var(--font-mono)", fontSize: "9.5px", letterSpacing: "0.14em", textTransform: "uppercase" }}
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-comet-blue opacity-60 font-mono w-3 text-center">
-                    {icon}
-                  </span>
-                  <span className="text-[10.5px] font-medium tracking-widest uppercase text-ink-600 group-hover:text-ink-400 transition-colors">
-                    {category}
-                  </span>
-                </div>
-                {isOpen ? (
-                  <ChevronDown size={11} className="text-ink-600 opacity-60" />
-                ) : (
-                  <ChevronRight size={11} className="text-ink-600 opacity-60" />
-                )}
+                <span>{category}</span>
+                {catOpen
+                  ? <ChevronDown size={9} style={{ opacity: 0.5 }} />
+                  : <ChevronRight size={9} style={{ opacity: 0.5 }} />}
               </button>
 
-              {isOpen && (
-                <div className="mt-0.5 ml-3 pl-2 border-l border-white/5 space-y-0.5">
-                  {notes.map((note) => (
-                    <Link
-                      key={note.path}
-                      href={`/notes/${note.path}`}
-                      onClick={() => setMobileOpen(false)}
-                      className={clsx(
-                        "nav-item block px-3 py-1.5 rounded-r-md text-sm leading-snug transition-all duration-200 truncate",
-                        isActive(note.path)
-                          ? "sidebar-item-active text-comet-blue bg-comet-blue-glow"
-                          : "text-ink-400 hover:text-ink-200 hover:bg-white/3"
-                      )}
-                    >
-                      {note.title}
-                    </Link>
-                  ))}
+              {catOpen && (
+                <div className="mt-0.5">
+                  {notes.map((note) => {
+                    const active = isActive(note.path);
+                    const hasSections = note.sections.length > 0;
+                    const tocOpen = tocCollapsed[note.path] !== false; // open by default when active
+
+                    return (
+                      <div key={note.path}>
+                        {/* Note row */}
+                        <div className="flex items-center mx-2">
+                          <Link
+                            href={`/notes/${note.path}`}
+                            onClick={() => setMobileOpen(false)}
+                            className={clsx(
+                              "sidebar-item flex-1 px-3 py-1.5 rounded text-[12.5px] leading-snug truncate transition-colors",
+                              active ? "sidebar-item--active" : "sidebar-item--default"
+                            )}
+                          >
+                            {note.title}
+                          </Link>
+                          {/* TOC toggle — only show when active and has sections */}
+                          {active && hasSections && (
+                            <button
+                              onClick={() => setTocCollapsed((p) => ({ ...p, [note.path]: p[note.path] !== false ? false : true }))}
+                              className="shrink-0 p-1 rounded transition-colors"
+                              style={{ color: "var(--text-4)" }}
+                              title={tocOpen ? "Hide sections" : "Show sections"}
+                            >
+                              {tocOpen ? <ChevronDown size={9} /> : <ChevronRight size={9} />}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Sections TOC — only for active note */}
+                        {active && hasSections && tocOpen && (
+                          <div className="ml-5 mt-0.5 mb-1" style={{ borderLeft: "1px solid var(--border-mid)" }}>
+                            {note.sections.map((sec) => (
+                              <Link
+                                key={sec.id}
+                                href={`/notes/${note.path}#${sec.id}`}
+                                onClick={() => setMobileOpen(false)}
+                                className="block px-3 py-1 text-[11px] leading-snug truncate transition-colors hover:text-accent"
+                                style={{
+                                  color: "var(--text-4)",
+                                  paddingLeft: sec.level === 3 ? "1.5rem" : "0.75rem",
+                                }}
+                              >
+                                {sec.text}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -179,10 +155,13 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
         })}
       </div>
 
-      {/* Footer */}
-      <div className="px-4 py-3 border-t border-white/5">
-        <div className="text-[10px] text-ink-600 tracking-wider">
-          {Object.values(notesByCategory).flat().length} notes indexed
+      {/* ── Footer ── */}
+      <div className="px-4 py-3 shrink-0" style={{ borderTop: "1px solid var(--border)" }}>
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full animate-pulse-glow" style={{ background: "var(--accent)" }} />
+          <span style={{ fontFamily: "var(--font-mono)", color: "var(--text-4)", fontSize: "10px" }}>
+            {totalNotes} notes · live
+          </span>
         </div>
       </div>
     </nav>
@@ -190,32 +169,25 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside
-        className="hidden md:flex fixed left-0 top-0 bottom-0 flex-col w-[272px] z-30"
-        style={{
-          background:
-            "linear-gradient(180deg, #0a0d18 0%, #0b0e1c 50%, #09111e 100%)",
-          borderRight: "1px solid rgba(255,255,255,0.04)",
-          backdropFilter: "blur(12px)",
-        }}
-      >
-        {sidebarContent}
+      {/* Desktop */}
+      <aside className="stella-sidebar hidden md:flex fixed left-0 top-0 bottom-0 flex-col w-[260px] z-30">
+        {content}
       </aside>
 
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="md:hidden fixed top-3.5 left-4 z-50 p-1.5 rounded-md bg-space-800 border border-white/8 text-ink-400 hover:text-ink-100 transition-colors"
-        aria-label="Toggle menu"
+        className="mobile-toggle md:hidden fixed top-3.5 left-4 z-50 p-1.5 rounded transition-colors"
+        aria-label={mobileOpen ? "Close menu" : "Open menu"}
       >
-        {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+        {mobileOpen ? <X size={16} /> : <Menu size={16} />}
       </button>
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+          className="md:hidden fixed inset-0 z-40"
+          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)" }}
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -223,15 +195,11 @@ export default function Sidebar({ notesByCategory }: SidebarProps) {
       {/* Mobile sidebar */}
       <aside
         className={clsx(
-          "md:hidden fixed left-0 top-0 bottom-0 w-72 z-50 flex flex-col transition-transform duration-300",
+          "md:hidden stella-sidebar fixed left-0 top-0 bottom-0 w-[260px] z-50 flex flex-col transition-transform duration-300",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        style={{
-          background: "#0a0d18",
-          borderRight: "1px solid rgba(255,255,255,0.06)",
-        }}
       >
-        {sidebarContent}
+        {content}
       </aside>
     </>
   );
