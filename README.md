@@ -10,9 +10,20 @@ Structured quantitative-finance notes, built with **Next.js** (static export) an
 | **`gh-pages`** | **Generated** static site (`out/` after `next run build`) | **Do not edit by hand.** It is overwritten on every deploy. |
 | **`claude/build-stella-platform-Y1Bda`** *(legacy)* | Old snapshot; was mistakenly set as the **default** branch | **Delete** after switching default to `main` (see below). |
 
-**GitHub Pages** is configured to serve from branch **`gh-pages`** at the site root. The live URL is:
+**GitHub Pages** must serve the **built** site from branch **`gh-pages`**, folder **`/ (root)`** — not from `main`. The live URL is:
 
 **https://anthonynadjari.github.io/Stella/**
+
+### “Page not found” on GitHub Pages
+
+If **Settings → Pages** is set to **Branch: `main` / Folder: `/docs`**, the site will **404**. This repo has **no** `docs/` folder on `main`; the workflow writes the static export to the **`gh-pages`** branch.
+
+**Fix (repository Settings → Pages → Build and deployment):**
+
+1. **Source:** *Deploy from a branch* (or leave as-is if that is the only option).
+2. **Branch:** select **`gh-pages`**, not `main`.
+3. **Folder:** **`/ (root)`**, not `/docs`.
+4. Save and wait ~1–2 minutes for the site to rebuild.
 
 This repo uses `basePath: "/Stella"` in production, so every path includes `/Stella` (e.g. `/Stella/notes/equity/basket-skew/`).
 
