@@ -1,9 +1,9 @@
 ---
-title: Autocall Pricing — LSV vs LV
+title: Autocall Hedging — LSV vs LV
 category: Equity
-description: A comparative analysis of Local Stochastic Volatility (LSV) and Local Volatility (LV) models for autocallable structured products, including barrier sensitivities and vega hedging differences.
-tags: [autocall, LSV, local-vol, stochastic-vol, structured-products, barrier]
-date: 2025-01-28
+description: How local volatility and local stochastic volatility models differ for hedging autocallables — forward smile, volga, vanna, and the P&L mechanics that drive model reserves.
+tags: [autocall, hedging, LSV, local-vol, volga, vanna, structured-products]
+date: 2026-05-09
 ---
 
 import Section from "@/components/Section";
@@ -11,97 +11,81 @@ import Callout from "@/components/Callout";
 import MathBlock from "@/components/MathBlock";
 import Sketch from "@/components/Sketch";
 
-<Section number="01" title="The Autocall Structure">
+<Section number="01" title="Why autocall hedging is model-dependent">
 
-An **autocall** is a structured note that automatically redeems early if the underlying crosses a **barrier level** on one of several **observation dates**.
+An **autocall** redeems early when the underlying (or a basket functional) is above barriers on observation dates; coupons often depend on prior **survival**. Hedging uses vanillas and spot — but the **true** risks are **path-dependent** combinations of:
 
-The product:
-- **Auto-redeems** at $T_k$ if $S_{T_k} \geq B_k$, paying coupon $C_k$ plus notional
-- **Otherwise continues** to the next observation
-- **At maturity** $T_n$, pays a capital-protected (or capital-at-risk) amount
+- **Barrier transition probabilities** between observation dates
+- **Forward skew** and **forward vol** of the underlying conditional on survival
+- **Convexity in vol** (volga) and **spot–vol correlation** (vanna) when exotics are priced with smiles
 
-<MathBlock label="Autocall Payoff" number="1.1">
+<MathBlock label="Survival event" number="1.1">
 
 $$
-V = \sum_{k=1}^n \mathbf{1}\left[S_{T_k} \geq B_k,\ S_{T_j} < B_j\ \forall j < k\right]\cdot(N + C_k) \cdot D(0, T_k)
+\mathcal{A}_k = \left\{ S_{T_j} < B_j,\ \forall j < k \right\},\qquad
+p_k = \mathbb{P}\left( S_{T_k} \geq B_k \,\middle|\, \mathcal{A}_k \right)
 $$
 
 </MathBlock>
 
-<Callout type="insight">
-The key risk of autocalls lies in their **path-dependency**: the product only survives if the autocall barriers are not breached at all earlier dates. This creates a complex interaction between vol surface shape and barrier proximity.
-</Callout>
+**Local volatility (LV)** and **local stochastic volatility (LSV)** can match **today’s vanilla surface** yet imply **different dynamics** for how that surface evolves — hence **different hedge ratios** for the same autocall NPV.
 
-The **barrier feature** makes autocalls extremely sensitive to:
-1. The **forward vol** (vol between observation dates)
-2. The **vol of vol** (how the smile evolves)
-3. The **skew** near barrier levels
+<Callout type="insight">
+Hedging an autocall is not only **delta–gamma** management. A large part of unexplained P&L comes from **smile dynamics** that LV and LSV predict differently — especially **between observation dates**.
+</Callout>
 
 </Section>
 
-<Section number="02" title="Local Volatility — LV Model">
+<Section number="02" title="Hedging under local volatility">
 
-In the **Local Volatility** model (Dupire 1994), the spot dynamics are:
+In Dupire LV, spot follows $dS/S = \cdots + \sigma_{\mathrm{loc}}(S,t)\,dW$. The model has **no independent stochastic volatility factor**; future smiles are **functionals** of today’s entire surface.
 
-<MathBlock label="LV Dynamics" number="2.1">
+### Consequences for hedging
 
-$$
-\frac{dS_t}{S_t} = \mu(t)\,dt + \sigma_{\text{loc}}(S_t, t)\,dW_t
-$$
-
-</MathBlock>
-
-The local vol function $\sigma_{\text{loc}}(K, T)$ is uniquely determined by Dupire's formula:
-
-$$
-\sigma_{\text{loc}}^2(K,T) = \frac{\partial_T C + (r-q)K\,\partial_K C + q\,C}{\tfrac{1}{2}K^2\,\partial_{KK}C}
-$$
-
-In LV, the **forward variance** $\mathbb{E}[\sigma_{\text{loc}}^2(S_u, u) | \mathcal{F}_t]$ is fully determined by today's surface — the model **has no free parameters for forward vols**.
+- **Vega** is primarily **spot- and time-local**: re-hedging vanillas can **overfit** today's surface while **missing forward buckets** that matter for barrier survival.
+- **Volga** from a pure diffusion LV perspective is often **muted** compared to what traders observe when the market smile **moves in a correlated way** with spot.
+- **Vanna** is **encoded** in how $\sigma_{\mathrm{loc}}$ changes with $S$; it is not a free parameter matched to historical smile dynamics.
 
 <Callout type="warning">
-In LV, the forward skew decays much faster than implied by market intuition. For a 3-month forward starting option with 1-year total maturity, LV predicts a forward skew roughly **half** the spot skew. This is unrealistically low for most equity underlyings.
+A desk hedging an autocall purely to **LV bucketed vega** may run a **structural short vol-of-vol** vs realized smile moves — the hedge **looks** flat day one but bleeds through observation periods.
 </Callout>
 
 </Section>
 
-<Section number="03" title="Local Stochastic Volatility — LSV Model">
+<Section number="03" title="Hedging under LSV">
 
-**Local Stochastic Volatility** models combine a stochastic vol driver with a local vol leverage function $L(S,t)$ that ensures perfect vanilla calibration.
+LSV combines a stochastic variance process $V_t$ with a **leverage function** $L(S,t)$ so that **all European vanillas** reprice:
 
-<MathBlock label="LSV Dynamics" number="3.1">
+<MathBlock label="LSV spot dynamics" number="3.1">
 
 $$
-\begin{cases}
-\dfrac{dS_t}{S_t} = \mu_t\,dt + L(S_t,t)\,\sqrt{V_t}\,dW_t^S \\[8pt]
-dV_t = \kappa(\theta - V_t)\,dt + \xi\,\sqrt{V_t}\,dW_t^V \\[6pt]
+\frac{dS_t}{S_t} = \mu_t\,dt + L(S_t,t)\,\sqrt{V_t}\,dW_t^S,\qquad
 d\langle W^S, W^V\rangle_t = \rho\,dt
-\end{cases}
 $$
 
 </MathBlock>
 
-The leverage function $L(S,t)$ is determined by the **McKean-Vlasov** inversion condition:
+### Hedging profile
 
-$$
-L^2(S,t) = \frac{\sigma_{\text{loc}}^2(S,t)}{\mathbb{E}[V_t \,|\, S_t = S]}
-$$
+| Greek / bucket | LV | LSV |
+|----------------|----|-----|
+| Spot delta / gamma | From local diffusion | Similar local part + **variance exposure** |
+| Vega (ATM) | Localized in $(S,t)$ | **Persists** — variance factor moves smile globally |
+| Volga | Typically small in pure LV mindset | **Material** — moves in $V$ change curvature |
+| Vanna | Implied by $\partial\sigma_{\mathrm{loc}}/\partial S$ | **Explicit** $\rho$ and $L$ geometry |
+| Forward smile | Decays quickly | **Richer** forward skew / vol transition |
 
-This ensures marginals of $S_t$ match the market-implied distribution exactly.
-
-<Callout type="insight">
-The leverage function $L$ acts as a **residual** between the target vanilla surface and what the pure stochastic vol process would produce. When $L \equiv 1$, the model reduces to pure Heston; when $\xi \to 0$, it reduces to pure LV.
+<Callout type="note">
+In LSV, **choosing** $(\kappa,\theta,\xi,\rho)$ is partly a **dynamic calibration**: you match not only vanillas but also the **autocorrelation** of implied vol and the **skew stickiness** observed in the asset class.
 </Callout>
 
 </Section>
 
-<Section number="04" title="Key Differences for Autocall Pricing">
+<Section number="04" title="Forward smile and barrier P&L">
 
-### 1. Forward Skew
+Autocalls care about $\mathbb{P}(S_{T_k} \geq B_k \mid \mathcal{A}_k)$. That probability depends on the **forward distribution** of $S_{T_k}$ given information at $T_{k-1}$ — hence on **forward implied vol** and **forward skew**.
 
-Autocalls are sensitive to the conditional distribution of $S_{T_k} | S_{T_{k-1}} < B_{k-1}$, which is determined by the **forward smile**.
-
-<Sketch title="Forward Skew Comparison: LV vs LSV" caption="Forward starting smile at T=6m, horizon T=1Y. LSV preserves more skew in the forward smile, leading to different barrier crossing probabilities.">
+<Sketch title="Forward smile: LV vs LSV" caption="Illustrative forward slice: LSV retains more skew than LV. Barrier crossing probabilities shift — hedging notionals on OTM calls differ.">
   <svg viewBox="0 0 500 260" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-[500px]">
     {[0,1,2,3,4].map(i => (
       <line key={`h${i}`} x1="60" y1={30 + i * 50} x2="460" y2={30 + i * 50}
@@ -114,109 +98,63 @@ Autocalls are sensitive to the conditional distribution of $S_{T_k} | S_{T_{k-1}
     <line x1="60" y1="230" x2="460" y2="230" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
     <line x1="60" y1="30" x2="60" y2="230" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
     <line x1="260" y1="30" x2="260" y2="230" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="4,3"/>
-    <text x="260" y="24" fill="rgba(154,163,178,0.5)" fontSize="9" textAnchor="middle" fontFamily="monospace">ATM</text>
+    <text x="260" y="24" fill="var(--text-4)" fontSize="9" textAnchor="middle" fontFamily="var(--font-mono),monospace">ATM</text>
     <path d="M 80 80 C 120 90, 180 120, 260 148 C 320 168, 380 188, 440 218"
-      stroke="#7aa2ff" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+      stroke="var(--accent)" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
     <path d="M 80 110 C 130 115, 190 130, 260 148 C 320 162, 370 178, 440 210"
-      stroke="rgba(246,193,119,0.7)" strokeWidth="2" fill="none" strokeLinecap="round" strokeDasharray="6,3"/>
-    <text x="260" y="248" fill="rgba(154,163,178,0.6)" fontSize="10" textAnchor="middle" fontFamily="monospace">moneyness K/F</text>
-    <text x="16" y="135" fill="rgba(154,163,178,0.6)" fontSize="10" textAnchor="middle" fontFamily="monospace" transform="rotate(-90,16,135)">impl. vol</text>
+      stroke="var(--gold)" strokeWidth="2" fill="none" strokeLinecap="round" strokeDasharray="6,3" opacity="0.85"/>
+    <text x="260" y="248" fill="var(--text-3)" fontSize="10" textAnchor="middle" fontFamily="var(--font-mono),monospace">moneyness K/F</text>
+    <text x="16" y="135" fill="var(--text-3)" fontSize="10" textAnchor="middle" fontFamily="var(--font-mono),monospace" transform="rotate(-90,16,135)">impl. vol</text>
     {["80%","90%","100%","110%","120%"].map((v, i) => (
-      <text key={v} x={80 + i * 80} y="244" fill="rgba(154,163,178,0.45)" fontSize="9" textAnchor="middle" fontFamily="monospace">{v}</text>
+      <text key={v} x={80 + i * 80} y="244" fill="var(--text-4)" fontSize="9" textAnchor="middle" fontFamily="var(--font-mono),monospace">{v}</text>
     ))}
-    <line x1="290" y1="60" x2="318" y2="60" stroke="#7aa2ff" strokeWidth="2.5"/>
-    <text x="324" y="64" fill="#9aa3b2" fontSize="10" fontFamily="sans-serif">LSV forward smile</text>
-    <line x1="290" y1="80" x2="318" y2="80" stroke="rgba(246,193,119,0.7)" strokeWidth="2" strokeDasharray="5,3"/>
-    <text x="324" y="84" fill="#9aa3b2" fontSize="10" fontFamily="sans-serif">LV forward smile</text>
+    <line x1="290" y1="60" x2="318" y2="60" stroke="var(--accent)" strokeWidth="2.5"/>
+    <text x="324" y="64" fill="var(--text-3)" fontSize="10" fontFamily="var(--font-body),sans-serif">LSV forward</text>
+    <line x1="290" y1="80" x2="318" y2="80" stroke="var(--gold)" strokeWidth="2" strokeDasharray="5,3" opacity="0.85"/>
+    <text x="324" y="84" fill="var(--text-3)" fontSize="10" fontFamily="var(--font-body),sans-serif">LV forward</text>
   </svg>
 </Sketch>
 
-### 2. Barrier Transition Probabilities
-
-<MathBlock label="Transition Probability" number="4.1">
+The **model spread** in PV is often summarized as:
 
 $$
-p_k = \mathbb{P}\left[S_{T_k} \geq B_k \,\Big|\, S_{T_j} < B_j,\ j < k\right]
+\Delta \mathrm{NPV}_{\mathrm{LV}-\mathrm{LSV}} \approx N \cdot \text{coupon} \cdot \sum_k D(0,T_k)\, \Delta p_k
 $$
 
-</MathBlock>
+For **ATM-style barriers**, LSV frequently implies **lower** autocall prices than LV (higher forward vol above spot in many calibrations) — for **down-and-risky** variants the sign can flip. Hedging must be sized to **stress** that spread, not only to the base model.
 
-The model spread in autocall NPV:
-
-$$
-\Delta V_{\text{LV-LSV}} \approx N \cdot \text{coupon} \cdot \sum_k D(0,T_k) \cdot \Delta p_k
-$$
-
-### 3. Vega Hedging Comparison
-
-| Sensitivity | Local Vol | LSV |
-|------------|-----------|-----|
-| Vega (spot vol) | Positive, decays fast | Positive, more persistent |
-| Volga (vega convexity) | Near zero | Significant |
-| Vanna (vol-spot correlation) | Model-implied only | Explicit via $\rho$ |
-| Forward vol risk | None (fully captured) | Explicit $\xi$ sensitivity |
-
-<Callout type="result" title="PRICING RULE OF THUMB">
-For autocalls with barriers at 100% (ATM observations), the LSV price tends to be <strong>5–15 bps lower</strong> than LV for a typical 1-year note, primarily due to the higher forward implied vol above spot in LSV. For down-barrier products (barrier &lt; 100%), the sign can reverse.
+<Callout type="result" title="Hedging rule of thumb">
+Overlay **forward skew hedges** (risk reversals / put spread structures in forward buckets) when LV–LSV PV differences exceed your **model reserve** threshold — otherwise barrier P&L will concentrate on observation weeks.
 </Callout>
 
 </Section>
 
-<Section number="05" title="Calibration Strategy">
+<Section number="05" title="Desk playbook — reserves and monitoring">
 
-### Two-Step Approach
-
-**Step 1 — Vanilla calibration (exact)**
-
-Calibrate $L(S,t)$ so the LSV model reprices all liquid vanillas exactly via the McKean-Vlasov condition:
+### Model reserve
 
 $$
-\min_{L} \sum_{K_i,T_j} \left|C^{\text{model}}(K_i,T_j) - C^{\text{market}}(K_i,T_j)\right|^2
+\text{Reserve} = \alpha \cdot |\Delta \mathrm{NPV}_{\mathrm{LV}-\mathrm{LSV}}|,\quad \alpha \in [0.3,0.7]
 $$
 
-**Step 2 — Exotic calibration (model selection)**
+### Daily monitors
 
-Choose $(\xi, \kappa, \rho)$ of the stochastic vol component to match liquid exotics and historical smile dynamics.
+| Monitor | Intent |
+|---------|--------|
+| LV vs LSV PV & Greeks | Bucketed vega / volga mismatch |
+| Forward vol ratio | Spot vs forward consistency |
+| Realized vs implied skew path | Sticky-delta vs sticky-strike behavior |
+| Week-before-observation stress | Barrier proximity scenarios |
 
-<Callout type="note">
-In practice: $\rho$ is calibrated to vanilla skew, $\xi$ to curvature (butterfly), $\kappa$ controls the term structure of the forward smile.
-</Callout>
+### Instrument map
 
-### Numerical Implementation
-
-```python
-# Particle method for L(S,t)
-for t_k in time_steps:
-    propagate_particles(S, V, params)
-    E_V_given_S = kernel_regression(S_particles, V_particles)
-    L_sq = sigma_loc(S, t_k) ** 2 / E_V_given_S
-    L = np.sqrt(np.maximum(L_sq, 0))
-    apply_leverage(S, V, L)
-```
-
-</Section>
-
-<Section number="06" title="Model Risk and Reserves">
-
-Given the LV/LSV discrepancy, risk managers assign a **model reserve**:
-
-$$
-\text{Reserve} = \alpha \cdot |\Delta V_{\text{LV-LSV}}|, \quad \alpha \in [0.3, 0.7]
-$$
+- **Vanilla straddles / strangles**: ATM vega buckets
+- **Risk reversals**: skew in forward slices
+- **Butterflies**: volga / smile curvature
+- **Short-dated OTM barriers** (when liquid): direct barrier correlation hedge
 
 <Callout type="warning">
-Using LV alone for autocall hedging can lead to systematic **short vega positions** not apparent from the standard delta-vega report. The missing vega in the forward smile creates a P&L bleed that shows up as unexplained theta losses over time.
+If **P&L explain** shows persistent **unexplained theta** into observations, first test **forward smile decay** assumptions — it is the dominant autocall hedging gap between LV and stochastic-style models.
 </Callout>
-
-### Monitoring Framework
-
-The **forward vol ratio** $\text{FVR}(T_1, T_2) = \sigma_{\text{fwd}}(T_1,T_2) / \sigma_{\text{spot}}(T_2)$ is a key early-warning indicator for model stress.
-
-| Monitor | Frequency | Action |
-|---------|-----------|--------|
-| LV vs LSV price spread | Daily | Flag if &gt; threshold |
-| Forward vol ratio | Daily | Stress test if out of range |
-| P&L explain | Daily | Decompose into greeks |
-| Scenario analysis | Weekly | ±10% vol shift, ±5% skew twist |
 
 </Section>
