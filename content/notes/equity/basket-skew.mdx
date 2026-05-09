@@ -1,8 +1,8 @@
 ---
-title: Implied Skew on Decrement Baskets
+title: Implied Skew Reconstruction — Decrement Baskets
 category: Equity
-description: Implied skew for worst-of and decrement-style basket structures — how barrier conditionals, order statistics, and correlation reshape the basket smile versus single names.
-tags: [basket, decrement, worst-of, implied-skew, correlation, structured-products]
+description: How to build an implied vol surface for a basket with no listed options — from single-name calibrations through Monte Carlo to autocall pricing impacts.
+tags: [skew, basket, decrement, correlation, volatility, autocall, structured-products]
 date: 2026-05-09
 ---
 
@@ -11,138 +11,197 @@ import Callout from "@/components/Callout";
 import MathBlock from "@/components/MathBlock";
 import Sketch from "@/components/Sketch";
 
-<Section number="01" title="Decrement baskets — payoff geometry">
+<Section number="01" title="The Problem">
 
-Many **autocallable notes** on a **basket** combine a **worst-of** (or rank-dependent) underlying with a **decrement** mechanism: the conditional coupon is reduced (or memory is lost) when any name in the basket crosses a barrier schedule. The effective state variable is not the basket average but a **path-dependent functional** of the minima (or order statistics) of the components.
+Consider a custom basket of $N$ stocks with initial weights $w_i$, subject to a fixed decrement $d$ (typically 50 bps/year or 5% annualised). This basket is the underlying of an autocall structure.
 
-Let $M_t = \min_i \bigl(S_i(t)/S_i(0)\bigr)$ denote the **normalized worst-of** level. A stylized **decrement** coupon at observation $T_k$ can be written as:
+No options trade on this basket — so there is **no observable implied vol surface**. However, listed options exist on each individual component $S_i$, giving us full implied vol surfaces $\sigma_i^{\text{imp}}(K, T)$.
 
-<MathBlock label="Decrement coupon (stylized)" number="1.1">
+The goal: **reconstruct the implied vol surface of the basket** from the single-name surfaces and a correlation structure, in a way that is arbitrage-free and consistent with market data.
+
+<Callout type="insight" title="Why not a simple vol ratio?">
+The naive approach — scaling a benchmark index surface by a constant ratio $k = \sigma_{\text{basket}}^{\text{hist}} / \sigma_{\text{index}}^{\text{hist}}$ — fails because it preserves the *shape* of the benchmark skew, which has no reason to match the basket's. The skew of a custom basket depends on its specific composition, sector concentration, correlation structure, and rebalancing rules. A scalar multiple cannot capture any of this.
+</Callout>
+
+</Section>
+
+<Section number="02" title="Basket Dynamics">
+
+### Basket value (pre-decrement)
+
+The basket performance index at time $t$, before decrement, is defined as:
+
+<MathBlock label="Basket Level" number="2.1">
 
 $$
-\text{Coupon}_k = C_{\max} - \Delta C \cdot \sum_{j \leq k} \mathbf{1}\left[\min_{t \in [T_{j-1},T_j]} M_t \leq B_j\right]
+B_t = \sum_{i=1}^{N} w_i \frac{S_{i,t}}{S_{i,0}}
 $$
 
 </MathBlock>
 
-with floors/caps omitted for clarity. The key observation: **any skew in the joint distribution of $(S_1,\ldots,S_n)$ near barriers feeds directly into decrement probabilities** — not only ATM basket vol.
+For a proportional decrement at rate $d$ per annum:
 
-<Callout type="insight">
-The **basket implied skew** relevant for decrement products is dominated by the **lower tail** of the joint distribution (worst-of events), not by the weighted-average stock skew used for dispersion-style basket options.
-</Callout>
-
-### Mapping to market data
-
-Vanillas on individual names give **marginal smiles**; index and multi-name exotics pin **implied correlation** and sometimes **correlation skew**. The task is to build a **consistent basket smile** for $M_t$ (or for a basket level $B_t = \sum_i w_i S_i$ when the payoff mixes both).
-
-</Section>
-
-<Section number="02" title="Implied skew of the worst-of">
-
-Consider $n$ names with log-returns $X_i$ at horizon $T$. The **worst-of log-return** is $X_{\min} = \min_i X_i$. For Gaussian copula / jointly normal shocks with correlation matrix $\rho$:
-
-<MathBlock label="Worst-of variance (Gaussian copula, equal vol)" number="2.1">
+<MathBlock label="Decrement Index" number="2.2">
 
 $$
-\sigma_{\min}^2 \approx \sigma^2 \left(1 - \frac{2}{\pi}(1-\bar\rho)\right)
+I_t = B_t \cdot e^{-d \, t}
 $$
 
 </MathBlock>
 
-where $\bar\rho$ is a representative average pairwise correlation (exact formulas use quadrature over order statistics). More importantly, the **left tail** of $X_{\min}$ is **fatter** than that of any single name when $\rho<1$, but **thinner** than independent names — correlation controls tail pooling.
-
-**Implied skew** for options on $M_T$ is driven by:
-
-1. **Marginal skew** of each $S_i$ (via $X_i$ asymmetry).
-2. **Dependence structure** (copula / correlation skew) governing co-jumps into the worst-of.
-3. **Barrier sampling** — discrete monitoring **lifts** hitting probabilities vs continuous models.
-
-<Callout type="warning">
-A common modelling trap is to price decrement baskets using **ATM basket vol** plus a **single-name skew overlay**. Near barriers, the **conditional law** of $M_t$ given *no prior decrement* is materially different from the unconditional law.
-</Callout>
-
-</Section>
-
-<Section number="03" title="From single-name smiles to basket skew">
-
-A practical recipe used on desks:
-
-### Step 1 — Marginals
-
-Calibrate each name to a parametric smile (SVI, SABR slice, or stochastic vol) so that $\sigma_i(K,T)$ is smooth and arbitrage-free.
-
-### Step 2 — Copula / correlation
-
-Choose a correlation matrix $\rho_{ij}(T)$ (possibly state-dependent). For **worst-of skew**, stress **basis correlation** scenarios: lowering $\rho_{ij}$ **increases** the mass on *divergent* paths where one name lags — often **increasing decrement risk** when barriers are name-specific.
-
-### Step 3 — Basket / min smile extraction
-
-Simulate $(S_1,\ldots,S_n)$ under the joint model; build the smile of $M_T$ (or of a basket index) by regression on vanilla payoffs or by FFT if a tractable characteristic function exists.
-
-<MathBlock label="Heuristic skew transfer" number="3.1">
+The decrement acts as a **forward shift** — it lowers the forward of the basket without changing its volatility directly. The adjusted forward is:
 
 $$
-\mathcal{S}_{M}(k) \;\approx\; \min_i \mathcal{S}_{i}(k) \;+\; \Phi(\rho,\kappa_3^{(i)},\text{barrier geometry})
+F_{\text{adj}}(T) = F_{\text{basket}}(T) \cdot e^{-d \, T}
+$$
+
+### Instantaneous variance of the basket
+
+Under a multi-asset diffusion where each stock follows its local vol dynamics, the instantaneous variance of the basket is:
+
+<MathBlock label="Basket Variance" number="2.3">
+
+$$
+\sigma_B^2(t) = \sum_{i=1}^{N} \sum_{j=1}^{N} \tilde{w}_i(t) \, \tilde{w}_j(t) \, \rho_{ij} \, \sigma_i^{\text{loc}}(S_i, t) \, \sigma_j^{\text{loc}}(S_j, t)
 $$
 
 </MathBlock>
 
-where $\mathcal{S}$ denotes a skew measure (e.g. 25Δ RR) and $\Phi$ collects **co-skew** adjustments from Gaussian or Edgeworth expansions.
+where $\tilde{w}_i(t) = w_i \, S_{i,t} / B_t$ are the **effective weights** at time $t$, which drift dynamically as stocks diverge from each other.
 
-<Callout type="note">
-For **equal barriers** on all names, the worst-of event is symmetric in labels; for **heterogeneous barriers**, the skew is **concentrated** on the tightest names — always sort names by **barrier distance in local vol units** before reduction formulas.
+<Callout type="insight" title="Path dependency">
+The effective weights $\tilde{w}_i(t)$ depend on the full path of each stock up to $t$, not just on terminal levels. If the basket rebalances periodically to fixed weights, the weight dynamics reset at each rebalancing date. In both cases (fixed or rebalanced), the basket variance is path-dependent, which rules out closed-form solutions and forces a Monte Carlo approach.
 </Callout>
 
 </Section>
 
-<Section number="04" title="Forward skew and decrement conditionals">
+<Section number="03" title="The Reconstruction Pipeline">
 
-Decrement structures are **path-dependent**: conditioning on *no decrement so far* removes mass from trajectories that dipped near barriers. The **forward smile** relevant for the next period is therefore **conditioned**:
+**Step 1 — Calibrate local vol (or SLV) on each component.** For each stock $i$, invert its listed implied surface to obtain $\sigma_i^{\text{loc}}(S, t)$ via Dupire. For better forward-skew dynamics (critical for autocalls with distant barriers), calibrate a stochastic-local vol model (e.g. Heston + local vol lever function).
+
+**Step 2 — Specify the correlation structure.** Build $\rho_{ij}$ either from historical realised correlations or — better — by extracting **implied correlation** from a benchmark index. If the benchmark index has vol $\sigma_{\text{idx}}^{\text{imp}}$, known weights $\omega_i$, and the component vols are known, invert:
 
 $$
-\sigma_{\text{impl}}^{\text{fwd}}(k) \;\text{ under }\; \mathbb{P}\bigl(\cdot \mid \forall j<k,\ \min_{[T_{j-1},T_j]} M_t > B_j\bigr)
+\left(\sigma_{\text{idx}}^{\text{imp}}\right)^2 = \sum_{i,j} \omega_i \, \omega_j \, \hat{\rho}_{ij} \, \sigma_i^{\text{imp}} \, \sigma_j^{\text{imp}}
 $$
 
-**Local volatility** models tend to **flatten** this forward skew rapidly; **LSV** and **stochastic vol** preserve more forward smile and typically shift **decrement probabilities** vs LV (see the companion note on autocall hedging).
+for a flat implied correlation $\hat{\rho}$, or fit a parametric structure. Extract a term structure by doing this per maturity.
 
-<Sketch title="Worst-of tail vs. correlation" caption="Schematic: lower tail index of the min (quantile spread) vs average correlation. Lower ρ widens the left tail of the worst-of — higher decrement sensitivity to skew misspecification.">
-  <svg viewBox="0 0 520 280" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full max-w-[520px]">
-    {[0,1,2,3,4].map(i => (
-      <line key={`h${i}`} x1="60" y1={40 + i * 50} x2="480" y2={40 + i * 50}
-        stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-    ))}
-    {[0,1,2,3,4,5].map(i => (
-      <line key={`v${i}`} x1={60 + i * 84} y1="40" x2={60 + i * 84} y2="240"
-        stroke="rgba(255,255,255,0.04)" strokeWidth="1" />
-    ))}
-    <line x1="60" y1="240" x2="480" y2="240" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
-    <line x1="60" y1="40" x2="60" y2="240" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
-    <path d="M 60 95 C 140 115, 220 145, 300 168 C 360 185, 420 200, 480 212"
-      stroke="var(--accent)" strokeWidth="2" fill="none" strokeLinecap="round" style={{ filter: "drop-shadow(0 0 4px var(--accent-glow))" }} />
-    <text x="270" y="265" fill="var(--text-3)" fontSize="11" textAnchor="middle" fontFamily="var(--font-mono),monospace">average correlation ρ̄</text>
-    <text x="22" y="145" fill="var(--text-3)" fontSize="11" textAnchor="middle" fontFamily="var(--font-mono),monospace" transform="rotate(-90,22,145)">left-tail spread (worst-of)</text>
-    {["0.2","0.35","0.5","0.65","0.8","0.95"].map((v, i) => (
-      <text key={v} x={60 + i * 84} y="256" fill="var(--text-4)" fontSize="9" textAnchor="middle" fontFamily="var(--font-mono),monospace">{v}</text>
-    ))}
-    <line x1="300" y1="175" x2="328" y2="175" stroke="var(--accent)" strokeWidth="2"/>
-    <text x="334" y="179" fill="var(--text-3)" fontSize="10" fontFamily="var(--font-body),sans-serif">Tail widening as ρ̄ ↓</text>
-  </svg>
-</Sketch>
+**Step 3 — Multi-asset Monte Carlo simulation.** Generate $M$ paths (typically 200k–500k for smooth skew) for all $N$ stocks simultaneously. At each time step:
+
+- Draw correlated Gaussians via Cholesky decomposition of $\rho$.
+- Evolve each $S_i$ under its own local vol $\sigma_i^{\text{loc}}(S_i, t)$.
+- Compute $B_t$ and apply the decrement to get $I_t$.
+- If the basket rebalances, reset weights at rebalancing dates.
+
+**Step 4 — Price vanillas on the basket and invert.** From the simulated distribution of $I_T$, compute call and put prices on the basket for a grid of strikes $K$ and maturities $T$:
+
+$$
+C(K, T) = e^{-rT} \, \mathbb{E}\!\left[\left(I_T - K\right)^+\right] \approx \frac{e^{-rT}}{M} \sum_{m=1}^{M} \left(I_T^{(m)} - K\right)^+
+$$
+
+Then invert Black-Scholes for each $(K, T)$ to recover:
+
+$$
+\sigma_{\text{basket}}^{\text{imp}}(K, T) = \text{BS}^{-1}\!\left(C(K, T),\; F_{\text{adj}}(T),\; K,\; T\right)
+$$
+
+**Step 5 — Smooth and parametrise.** Fit the raw implied vol points with a parametric model — SVI (Gatheral) or SABR — to obtain a smooth, arbitrage-free, interpolable surface. This is what gets passed to the autocall pricer.
 
 </Section>
 
-<Section number="05" title="Implementation checklist">
+<Section number="04" title="Where the Skew Comes From">
 
-| Item | Purpose |
-|------|---------|
-| Marginal smiles + no-arb checks | Stable $\sigma_i(K,T)$ for simulation |
-| Correlation / copula stress grid | Bounds on worst-of tail |
-| Barrier monitoring (discrete) | Coupon step and PRDC-style discontinuities |
-| Forward skew under survival | Conditionals for remaining coupons |
-| Model reserve (LV vs LSV) | Capture forward smile uncertainty |
+The reconstructed skew of the basket is not assumed — it **emerges mechanically** from the simulation. It has three distinct drivers:
 
-<Callout type="result" title="Desk summary">
-For **decrement baskets**, hedge ratios to **single-name skew** are **concentrated** in the names closest to barriers in **local-vol distance**. A robust book aggregates **skew sensitivities by barrier cohort**, not by notional weight alone.
+### Single-name skew propagation
+
+Each stock's local vol surface encodes its own skew: $\sigma_i^{\text{loc}}(S, t)$ is an increasing function of moneyness on the downside. In crash scenarios, all stocks move into regions of higher local vol, which inflates the basket variance. This propagates individual skew into the basket.
+
+### Correlation regime shift
+
+In practice, correlations rise in down markets (the "correlation smile"). Even with a fixed $\rho_{ij}$ matrix, the effective correlation of the basket increases in down scenarios because individual skews push all vols higher simultaneously. If using stochastic or regime-dependent correlation, this effect is amplified further. This fattens the left tail of the basket distribution.
+
+### Weight concentration (dispersion effect)
+
+In a fixed basket (no rebal), a stock that drops 40% sees its effective weight $\tilde{w}_i$ shrink, naturally de-risking the basket. But in a rebalanced basket, the weights are reset — you **re-concentrate exposure** on the loser, which now has the highest vol. This creates a pro-cyclical vol injection mechanism. Quantitatively, the post-rebal basket variance is higher than the pre-rebal variance because:
+
+$$
+\sigma_{B,\text{post-rebal}}^2 = \sum_{i,j} w_i \, w_j \, \rho_{ij} \, \sigma_i^{\text{loc}} \, \sigma_j^{\text{loc}} \;\;>\;\; \sum_{i,j} \tilde{w}_i \, \tilde{w}_j \, \rho_{ij} \, \sigma_i^{\text{loc}} \, \sigma_j^{\text{loc}} = \sigma_{B,\text{pre-rebal}}^2
+$$
+
+because reverting to equal weights (or initial weights) from post-crash drifted weights increases the contribution of high-vol stocks.
+
+<Callout type="result" title="Net effect">
+The combination of these three channels — single-name skew, correlation regime, weight concentration — produces a basket implied vol surface with a **steeper skew** and **heavier left tail** than any individual component, and steeper still for rebalanced baskets vs. fixed baskets.
 </Callout>
+
+</Section>
+
+<Section number="05" title="Impact on Autocall Pricing">
+
+An autocall investor is **long coupons + early redemption** and **short a down-and-in put** (KI barrier, typically 50–60% of initial). This makes the investor structurally short vol and short skew.
+
+### Vega exposure
+
+The Vega of the autocall is net negative, dominated by the short put embedded in the KI. Higher basket vol → higher KI put value → **lower autocall price** to the investor. The rebalanced basket, being structurally more volatile, therefore commands a **higher coupon** (compensation for taking more risk) than the same structure on a fixed basket.
+
+### Skew exposure
+
+The autocall's short KI put is deep OTM — its price is directly driven by the left tail of the basket distribution. A steeper skew means higher implied vol at the KI strike, which increases the embedded put value disproportionately. The pricing difference between a correctly reconstructed skew and a flat vol-ratio proxy can be **significant** — on the order of 50–150 bps of coupon for a typical 3Y–5Y autocall, depending on basket composition and barrier level.
+
+### Decrement amplification
+
+The decrement lowers the forward of the basket, which has two effects:
+
+- The ATM vol reference shifts (the "moneyness" of the KI barrier changes relative to the forward).
+- The basket starts "closer" to the KI barrier in forward space, making the put more in-the-money in forward terms and increasing the sensitivity to the downside vol.
+
+<MathBlock label="Forward-Adjusted Barrier Moneyness" number="5.1">
+
+$$
+m_{\text{KI}} = \frac{K_{\text{KI}}}{F_{\text{adj}}(T)} = \frac{K_{\text{KI}}}{F_{\text{basket}}(T) \cdot e^{-dT}}
+$$
+
+</MathBlock>
+
+As $d$ increases, the effective moneyness of the KI barrier increases, making the embedded put more expensive and pushing the coupon higher.
+
+<Callout type="warning" title="Mispricing risk">
+Using a vol ratio proxy instead of a properly reconstructed skew systematically **underestimates the left tail** of the basket, which underprices the KI put and therefore overstates the autocall's value to the investor. For the issuing bank, this means taking on unhedged tail risk. The magnitude depends on how different the basket's true skew is from the proxy index's — which is precisely the information that the reconstruction pipeline provides.
+</Callout>
+
+</Section>
+
+<Section number="06" title="Practical Considerations">
+
+### Computational cost
+
+Multi-asset MC with local vol on 20–50 underlyings requires 200k–500k paths for a smooth skew surface. This is GPU-amenable (embarrassingly parallel). Variance reduction via antithetic variates and control variates (using the benchmark index as control) can reduce the path count by 3–5x for the same accuracy.
+
+### Correlation calibration
+
+The correlation matrix is the least observable and most sensitive input. Best practice is to calibrate on index dispersion trades (long index vol / short single-stock vol) or on correlation swap levels when available. The key sensitivity to test is the **correlation skew** — how much correlation increases in down scenarios — since this is the primary driver of the basket's left tail.
+
+### Rebalancing frequency
+
+Discrete rebalancing (monthly, quarterly) must be modelled explicitly in the simulation. More frequent rebalancing → more vol injection → steeper skew. The rebalancing schedule is contractually fixed in the index rules, so it's not a modelling choice but a constraint to respect.
+
+### Stability
+
+The reconstructed surface should be checked for calendar spread and butterfly arbitrage. The SVI/SABR fit enforces no-arbitrage constraints. Day-to-day stability of the surface depends on the stability of the single-name inputs and the correlation matrix — bumping each by 1 standard deviation and re-running the pipeline gives a practical measure of model risk.
+
+</Section>
+
+---
+
+<Section number="07" title="Methods Comparison">
+
+| Method | Inputs | Skew? | Arb-Free? | Use Case |
+|--------|--------|-------|-----------|----------|
+| Vol ratio | Historical vols, benchmark surface | Borrowed from proxy | No guarantee | Quick & dirty indicative |
+| Beta-adjusted skew | β vs proxy, ATM basket vol | Scaled from proxy | Approximate | Fast desk pricing |
+| Analytical moment matching | Single-name vols, ρ matrix | ATM + partial skew | Approximate | Sanity checks, risk limits |
+| MC local vol / SLV | Full single-name surfaces, ρ matrix | Fully emergent | Yes (if fitted) | Final pricing, large notionals |
 
 </Section>
