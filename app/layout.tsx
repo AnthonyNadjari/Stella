@@ -13,6 +13,11 @@ export const metadata: Metadata = {
   description:
     "A premium knowledge platform for quantitative finance professionals.",
   keywords: ["quant finance", "volatility", "derivatives", "structured products"],
+  icons: {
+    icon: [
+      { url: "/Stella/favicon.svg", type: "image/svg+xml" },
+    ],
+  },
 };
 
 export const viewport: Viewport = { themeColor: "#050710" };
