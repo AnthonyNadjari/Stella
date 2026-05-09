@@ -6,26 +6,25 @@ Structured quantitative-finance notes, built with **Next.js** (static export) an
 
 | Branch | Role |
 |--------|------|
-| **`main`** | Source code: `app/`, `components/`, `content/notes/`, `styles/`, config. **Only branch you edit.** |
-
-The deployment workflow (`.github/workflows/deploy.yml`) builds the site and deploys directly via `actions/deploy-pages`. There is **no** `gh-pages` branch involved — GitHub Actions handles everything.
+| **`main`** | Source code. The only branch you edit. |
+| **`gh-pages`** | Auto-generated static site. Created by the deploy workflow. **Never edit by hand.** |
 
 **Live URL:** **https://anthonynadjari.github.io/Stella/**
 
-This repo uses `basePath: "/Stella"` in production, so all paths include `/Stella`.
-
 ## How the site updates
 
-1. Push to **`main`** (or merge a PR into `main`).
-2. GitHub Actions: `npm ci` → `npm run build` → uploads the `out/` folder → deploys to Pages.
+1. Push to **`main`**.
+2. GitHub Actions (`deploy.yml`): `npm ci` → `npm run build` → deploys `out/` to `gh-pages`.
+3. GitHub Pages serves `gh-pages` at the live URL.
 
 ## GitHub Pages configuration (one-time)
 
 In **Settings → Pages → Build and deployment**:
 
-- **Source:** select **GitHub Actions** (not "Deploy from a branch").
-
-That is the only required setting. No branch or folder selection is needed — the workflow file controls everything.
+1. **Source:** Deploy from a branch
+2. **Branch:** `gh-pages`
+3. **Folder:** `/ (root)` — **not** `/docs`
+4. Click **Save**
 
 ## Local development
 
@@ -34,8 +33,8 @@ npm ci
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The `/Stella` prefix only applies in production builds.
+Open [http://localhost:3000](http://localhost:3000).
 
 ## Content
 
-Notes live in `content/notes/` as `.mdx` (MDX + KaTeX). Routes and sidebar are generated from the file system.
+Notes are `.mdx` files in `content/notes/`. Routes and sidebar are generated automatically.
