@@ -27,8 +27,6 @@ The naive approach — scaling a benchmark index surface by a constant ratio $k 
 
 <Section number="02" title="Basket Dynamics">
 
-### Basket value (pre-decrement)
-
 The basket performance index at time $t$, before decrement, is defined as:
 
 <MathBlock label="Basket Level" number="2.1">
@@ -55,9 +53,7 @@ $$
 F_{\text{adj}}(T) = F_{\text{basket}}(T) \cdot e^{-d \, T}
 $$
 
-### Instantaneous variance of the basket
-
-Under a multi-asset diffusion where each stock follows its local vol dynamics, the instantaneous variance of the basket is:
+**Instantaneous variance of the basket.** Under a multi-asset diffusion where each stock follows its local vol dynamics, the instantaneous variance of the basket is:
 
 <MathBlock label="Basket Variance" number="2.3">
 
@@ -142,17 +138,11 @@ The combination of these three channels — single-name skew, correlation regime
 
 An autocall investor is **long coupons + early redemption** and **short a down-and-in put** (KI barrier, typically 50–60% of initial). This makes the investor structurally short vol and short skew.
 
-### Vega exposure
+**Vega exposure.** The Vega of the autocall is net negative, dominated by the short put embedded in the KI. Higher basket vol → higher KI put value → **lower autocall price** to the investor. The rebalanced basket, being structurally more volatile, therefore commands a **higher coupon** (compensation for taking more risk) than the same structure on a fixed basket.
 
-The Vega of the autocall is net negative, dominated by the short put embedded in the KI. Higher basket vol → higher KI put value → **lower autocall price** to the investor. The rebalanced basket, being structurally more volatile, therefore commands a **higher coupon** (compensation for taking more risk) than the same structure on a fixed basket.
+**Skew exposure.** The autocall's short KI put is deep OTM — its price is directly driven by the left tail of the basket distribution. A steeper skew means higher implied vol at the KI strike, which increases the embedded put value disproportionately. The pricing difference between a correctly reconstructed skew and a flat vol-ratio proxy can be **significant** — on the order of 50–150 bps of coupon for a typical 3Y–5Y autocall, depending on basket composition and barrier level.
 
-### Skew exposure
-
-The autocall's short KI put is deep OTM — its price is directly driven by the left tail of the basket distribution. A steeper skew means higher implied vol at the KI strike, which increases the embedded put value disproportionately. The pricing difference between a correctly reconstructed skew and a flat vol-ratio proxy can be **significant** — on the order of 50–150 bps of coupon for a typical 3Y–5Y autocall, depending on basket composition and barrier level.
-
-### Decrement amplification
-
-The decrement lowers the forward of the basket, which has two effects:
+**Decrement amplification.** The decrement lowers the forward of the basket, which has two effects:
 
 - The ATM vol reference shifts (the "moneyness" of the KI barrier changes relative to the forward).
 - The basket starts "closer" to the KI barrier in forward space, making the put more in-the-money in forward terms and increasing the sensitivity to the downside vol.
@@ -175,21 +165,13 @@ Using a vol ratio proxy instead of a properly reconstructed skew systematically 
 
 <Section number="06" title="Practical Considerations">
 
-### Computational cost
+**Computational cost.** Multi-asset MC with local vol on 20–50 underlyings requires 200k–500k paths for a smooth skew surface. This is GPU-amenable (embarrassingly parallel). Variance reduction via antithetic variates and control variates (using the benchmark index as control) can reduce the path count by 3–5x for the same accuracy.
 
-Multi-asset MC with local vol on 20–50 underlyings requires 200k–500k paths for a smooth skew surface. This is GPU-amenable (embarrassingly parallel). Variance reduction via antithetic variates and control variates (using the benchmark index as control) can reduce the path count by 3–5x for the same accuracy.
+**Correlation calibration.** The correlation matrix is the least observable and most sensitive input. Best practice is to calibrate on index dispersion trades (long index vol / short single-stock vol) or on correlation swap levels when available. The key sensitivity to test is the **correlation skew** — how much correlation increases in down scenarios — since this is the primary driver of the basket's left tail.
 
-### Correlation calibration
+**Rebalancing frequency.** Discrete rebalancing (monthly, quarterly) must be modelled explicitly in the simulation. More frequent rebalancing → more vol injection → steeper skew. The rebalancing schedule is contractually fixed in the index rules, so it's not a modelling choice but a constraint to respect.
 
-The correlation matrix is the least observable and most sensitive input. Best practice is to calibrate on index dispersion trades (long index vol / short single-stock vol) or on correlation swap levels when available. The key sensitivity to test is the **correlation skew** — how much correlation increases in down scenarios — since this is the primary driver of the basket's left tail.
-
-### Rebalancing frequency
-
-Discrete rebalancing (monthly, quarterly) must be modelled explicitly in the simulation. More frequent rebalancing → more vol injection → steeper skew. The rebalancing schedule is contractually fixed in the index rules, so it's not a modelling choice but a constraint to respect.
-
-### Stability
-
-The reconstructed surface should be checked for calendar spread and butterfly arbitrage. The SVI/SABR fit enforces no-arbitrage constraints. Day-to-day stability of the surface depends on the stability of the single-name inputs and the correlation matrix — bumping each by 1 standard deviation and re-running the pipeline gives a practical measure of model risk.
+**Stability.** The reconstructed surface should be checked for calendar spread and butterfly arbitrage. The SVI/SABR fit enforces no-arbitrage constraints. Day-to-day stability of the surface depends on the stability of the single-name inputs and the correlation matrix — bumping each by 1 standard deviation and re-running the pipeline gives a practical measure of model risk.
 
 </Section>
 
